@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Masuk Karyawan</title>
+    <!-- Tailwind CSS untuk styling responsif mobile -->
     <script src="https://jsdelivr.net"></script>
     <style>
+        /* Memastikan area kamera berbentuk lingkaran sempurna */
         #canvasBox {
             width: 180px;
             height: 180px;
@@ -26,16 +28,15 @@
     <div class="bg-white p-6 rounded-2xl shadow-md w-full max-w-md flex flex-col items-center">
         
         <!-- =================================================== -->
-        <!-- AREA UTAMA: KAMERA / FOTO (SELALU DI ATAS)          -->
+        <!-- AREA UTAMA: KAMERA / FOTO (SELALU DI ATAS LAYAR)    -->
         <!-- =================================================== -->
         <div id="canvasBox" class="bg-gray-200 mb-4 flex items-center justify-center">
             <video id="webcam" autoplay playsinline></video>
             <img id="photoPreview" class="hidden" alt="Preview">
         </div>
         <p id="cameraStatus" class="text-xs text-gray-500 mb-6 text-center">Menyiapkan kamera untuk pengenalan wajah...</p>
-
-        <!-- =================================================== -->
-        <!-- TAMPILAN 1: MENU UTAMA AWAL (DEFAULT)               -->
+                <!-- =================================================== -->
+        <!-- TAMPILAN 1: MENU UTAMA AWAL (DEFAULT TAMPIL)        -->
         <!-- =================================================== -->
         <div id="menuAwalBox" class="w-full space-y-3">
             <button id="btnFaceLogin" class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition">
@@ -69,7 +70,6 @@
             </form>
             <button id="btnKembaliDariLogin" class="w-full text-xs text-blue-600 hover:underline text-center block mt-2">← Kembali ke Pilihan Utama</button>
         </div>
-
         <!-- =================================================== -->
         <!-- TAMPILAN 3: FORM PENDAFTARAN (REGISTER)             -->
         <!-- =================================================== -->
@@ -120,26 +120,26 @@
         </div>
 
     </div>
-
+    <!-- =================================================== -->
+    <!-- LOGIKA JAVASCRIPT UTAMA                             -->
+    <!-- =================================================== -->
     <script>
-        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+        // ISI VARIABEL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxot-8n5vO8HRk8FXUdr8QZ3QMPmqyILogD9cHgLo_UFp1E10mt_Me5GH-y-FDiST8/exec";
 
         const video = document.getElementById('webcam');
         const photoPreview = document.getElementById('photoPreview');
         const cameraStatus = document.getElementById('cameraStatus');
         
-        // Kotak Navigasi Antarmuka
         const menuAwalBox = document.getElementById('menuAwalBox');
         const loginManualBox = document.getElementById('loginManualBox');
         const registerBox = document.getElementById('registerBox');
 
-        // Tombol Aksi Kontrol
         const btnAmbilFoto = document.getElementById('btnAmbilFoto');
         let fotoBase64 = "";
         let localStream = null;
 
-        // --- SISTEM AKSES KAMERA OTOMATIS SEJAK AWAL BUKA ---
+        // --- SISTEM AKSES KAMERA OTOMATIS ---
         async function jalankanKamera() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
@@ -153,7 +153,7 @@
             }
         }
         
-        // Jalankan kamera langsung saat halaman dimuat
+        // Membuka kamera langsung saat halaman web dimuat pertama kali
         window.addEventListener('DOMContentLoaded', jalankanKamera);
 
         // --- ENKRIPSI PASSWORD SHA-256 ---
@@ -164,7 +164,7 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // --- NAVIGASI ANTARMUKA DINAMIS ---
+        // --- NAVIGASI ANTARMUKA ---
         document.getElementById('lnkKeLoginManual').addEventListener('click', () => {
             menuAwalBox.classList.add('hidden');
             registerBox.classList.add('hidden');
@@ -183,82 +183,129 @@
             loginManualBox.classList.add('hidden');
             registerBox.classList.add('hidden');
             menuAwalBox.classList.remove('hidden');
-          resetKameraUlang();}
-      document.getElementById('btnKembaliDariLogin').addEventListener('click',keMenuUtama);
-      document.getElementById('btnKembaliDariDaftar').addEventListener('click', keMenuUtama);
-      function resetKameraUlang() {
-        fotoBase64 = "";photoPreview.classList.add('hidden');
-        video.classList.remove('hidden');btnAmbilFoto.innerText = "Kunci Foto Profil Anda";
-        btnAmbilFoto.className = "bg-green-600 text-white text-xs px-4 py-1.5 rounded-full hover:bg-green-700 transition";
-        if (!video.srcObject && localStream) {
-          jalankanKamera();}}
-      // --- PROSES PENGAMBILAN FOTO SAAT REGISTRASI ---
-      btnAmbilFoto.addEventListener('click', () => {if (video.classList.contains('hidden')) {
-        // Jika sedang preview foto, klik ulang berarti mau foto 
-        kembaliresetKameraUlang();
-        return;}
-              
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        fotoBase64 = canvas.toDataURL('image/jpeg');
-        photoPreview.src = fotoBase64;video.classList.add('hidden');
-        photoPreview.classList.remove('hidden');
-        btnAmbilFoto.innerText = "Ambil Ulang Foto";
-        btnAmbilFoto.className = "bg-orange-500 text-white text-xs px-4 py-1.5 rounded-full hover:bg-orange-600 transition";});
-      // --- SISTEM VERIFIKASI OTP EMAIL VIA BACKEND ---
-      document.getElementById('btnKirimOTP').addEventListener('click', async () => {
-        const email = document.getElementById('email').value;
-        if(!email) return alert("Mohon masukkan email Gmail Anda!");
-        document.getElementById('btnKirimOTP').innerText = "Mengirim...";
-        try {
-          const response = await fetch(APPS_SCRIPT_URL, {method: 'POST',body: JSON.stringify({ action: 'sendOTP', email: email })});
-          const result = await response.json();
-          if (result.status === "SUCCESS") {
-            alert(result.message);document.getElementById('otpBox').classList.remove('hidden');
-            const btnDaftar = document.getElementById('btnDaftar');
-            btnDaftar.removeAttribute('disabled');
-            btnDaftar.className = "w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition mt-2";} 
-          else {alert(result.message);}} 
-        catch (error) {
-          alert("Gagal terhubung ke Apps Script: " + error.message);} 
-        finally {document.getElementById('btnKirimOTP').innerText = "Kirim OTP";}});
-      
-      // --- PROSES REGISTER SUBMIT ---
-      document.getElementById('registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if(!fotoBase64) return alert("Wajib mengambil foto profil di dalam lingkaran terlebih dahulu!");
-        const passwordMentah = document.getElementById('password').value;
-        const passwordHashed = await sha256(passwordMentah);
-        const payload = {
-          action: 'register',
-          no_karyawan: document.getElementById('no_karyawan').value,
-          nama: document.getElementById('nama').value,
-          no_telepon: document.getElementById('no_telepon').value,
-          email: document.getElementById('email').value,
-          otp: document.getElementById('otp_code').value,
-          username: document.getElementById('username').value,
-          password_hash: passwordHashed,
-          fotoBase64: fotoBase64};
-        document.getElementById('btnDaftar').innerText = "Mendaftarkan...";
-        document.getElementById('btnDaftar').setAttribute('disabled', true);
-        try {
-          const response = await fetch(APPS_SCRIPT_URL, {method: 'POST',body: JSON.stringify(payload)});
-          const result = await response.json();
-          if (result.status === "SUCCESS") {
-            alert(result.message);
-            document.getElementById('registerForm').reset();
-            keMenuUtama();} 
-          else {alert(result.message);}} 
-        catch (error) {
-          alert("Error pendaftaran: " + error.message);} 
-        finally {document.getElementById('btnDaftar').innerText = "Daftar Akun";
-                 document.getElementById('btnDaftar').removeAttribute('disabled');}});
-      
-      // --- LOGIK LOG IN MANUAL (PONDASI AWAL TAHAP 2) ---
-      document.getElementById('loginForm').addEventListener('submit', (e) => {e.preventDefault();                                                                              alert("Sistem validasi Login Manual sedang dipersiapkan untuk langkah berikutnya!");});
-      
-      // --- LOGIK LOG IN WAJAH (PONDASI AWAL TAHAP 2) ---
-      document.getElementById('btnFaceLogin').addEventListener('click', () => {alert("Sistem Face Recognition menggunakan library face-api.js sedang dipersiapkan untuk langkah berikutnya!");});
+            resetKameraUlang();
+        }
+
+        document.getElementById('btnKembaliDariLogin').addEventListener('click', keMenuUtama);
+        document.getElementById('btnKembaliDariDaftar').addEventListener('click', keMenuUtama);
+
+        function resetKameraUlang() {
+            fotoBase64 = "";
+            photoPreview.classList.add('hidden');
+            video.classList.remove('hidden');
+            btnAmbilFoto.innerText = "Kunci Foto Profil Anda";
+            btnAmbilFoto.className = "bg-green-600 text-white text-xs px-4 py-1.5 rounded-full hover:bg-green-700 transition";
+            if (!video.srcObject && localStream) {
+                jalankanKamera();
+            }
+        }
+
+        // --- PROSES PENGAMBILAN FOTO UNTUK PROFIL ---
+        btnAmbilFoto.addEventListener('click', () => {
+            if (video.classList.contains('hidden')) {
+                resetKameraUlang();
+                return;
+            }
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            fotoBase64 = canvas.toDataURL('image/jpeg');
+            photoPreview.src = fotoBase64;
+            
+            video.classList.add('hidden');
+            photoPreview.classList.remove('hidden');
+            btnAmbilFoto.innerText = "Ambil Ulang Foto";
+            btnAmbilFoto.className = "bg-orange-500 text-white text-xs px-4 py-1.5 rounded-full hover:bg-orange-600 transition";
+        });
+
+        // --- SISTEM VERIFIKASI OTP EMAIL ---
+        document.getElementById('btnKirimOTP').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            if(!email) return alert("Mohon masukkan email Gmail Anda!");
+
+            document.getElementById('btnKirimOTP').innerText = "Mengirim...";
+            
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'sendOTP', email: email })
+                });
+                const result = await response.json();
+                
+                if (result.status === "SUCCESS") {
+                    alert(result.message);
+                    document.getElementById('otpBox').classList.remove('hidden');
+                    const btnDaftar = document.getElementById('btnDaftar');
+                    btnDaftar.removeAttribute('disabled');
+                    btnDaftar.className = "w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition mt-2";
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert("Gagal terhubung ke Apps Script: " + error.message);
+            } finally {
+                document.getElementById('btnKirimOTP').innerText = "Kirim OTP";
+            }
+        });
+
+        // --- PROSES SUBMIT DAFTAR AKUN ---
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(!fotoBase64) return alert("Wajib mengambil foto profil di dalam lingkaran terlebih dahulu!");
+
+            const passwordMentah = document.getElementById('password').value;
+            const passwordHashed = await sha256(passwordMentah);
+
+            const payload = {
+                action: 'register',
+                no_karyawan: document.getElementById('no_karyawan').value,
+                nama: document.getElementById('nama').value,
+                no_telepon: document.getElementById('no_telepon').value,
+                email: document.getElementById('email').value,
+                otp: document.getElementById('otp_code').value,
+                username: document.getElementById('username').value,
+                password_hash: passwordHashed,
+                fotoBase64: fotoBase64
+            };
+
+            document.getElementById('btnDaftar').innerText = "Mendaftarkan...";
+            document.getElementById('btnDaftar').setAttribute('disabled', true);
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.status === "SUCCESS") {
+                    alert(result.message);
+                    document.getElementById('registerForm').reset();
+                    keMenuUtama();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert("Error pendaftaran: " + error.message);
+            } finally {
+                document.getElementById('btnDaftar').innerText = "Daftar Akun";
+                document.getElementById('btnDaftar').removeAttribute('disabled');
+            }
+        });
+
+        // --- ANTARMUKA INTEGRASI LOGIN (TAHAP BERIKUTNYA) ---
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert("Sistem validasi Login Manual sedang dipersiapkan untuk langkah berikutnya!");
+        });
+
+        document.getElementById('btnFaceLogin').addEventListener('click', () => {
+            alert("Sistem Face Recognition menggunakan library face-api.js sedang dipersiapkan untuk langkah berikutnya!");
+        });
+    </script>
+</body>
+</html>
