@@ -232,10 +232,18 @@
         }
 
         function tutupSidebarHP() {
-            sidebarMenu.style.transform = "translateX(-100%)";
-            sidebarMenu.classList.add('-translate-x-full');
-            sidebarOverlay.classList.add('hidden');
-            sidebarOverlay.style.display = "none";
+            // Sensor Deteksi: Hanya jalankan fungsi tutup jika dibuka di layar HP (lebar < 768px)
+            if (window.innerWidth < 768) {
+                sidebarMenu.style.transform = "translateX(-100%)";
+                sidebarMenu.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+                sidebarOverlay.style.display = "none";
+                console.log("[UI] Sidebar mode mobile berhasil ditutup.");
+            } else {
+                // Jika di PC, pastikan gaya transform dikembalikan ke default agar tidak ikut tersembunyi
+                sidebarMenu.style.transform = "translateX(0)";
+                console.log("[UI] Sidebar mode PC dipertahankan tetap mengunci.");
+            }
         }
 
         // Kontrol klik tombol hamburger dan lapisan luar overlay
@@ -305,6 +313,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             jalankanJamDigital();
             muatDaftarMenuDinamis();
+            tutupSidebarHP(); // Memastikan kondisi awal sidebar sinkron sesuai ukuran layar PC/HP
         });
     </script>
 </body>
