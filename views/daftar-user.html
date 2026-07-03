@@ -1,0 +1,291 @@
+<div class="space-y-6 animate-fade-in">
+    
+    <!-- KARTU INFORMASI SUMMARY (MONITORING CEPAT) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-blue-600 p-4 rounded-2xl text-white shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-blue-100 uppercase tracking-wider">Total Bawahan</p>
+                <h3 id="countTotalBawahan" class="text-2xl font-bold mt-1">0</h3>
+            </div>
+            <span class="text-2xl bg-blue-700/50 p-2.5 rounded-xl">👥</span>
+        </div>
+        <div class="bg-amber-500 p-4 rounded-2xl text-white shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-amber-100 uppercase tracking-wider">Menunggu Approval</p>
+                <h3 id="countPendingApprove" class="text-2xl font-bold mt-1">0</h3>
+            </div>
+            <span class="text-2xl bg-amber-600/50 p-2.5 rounded-xl">⏳</span>
+        </div>
+        <div class="bg-red-500 p-4 rounded-2xl text-white shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-red-100 uppercase tracking-wider">Akun Diblokir</p>
+                <h3 id="countTotalBlocked" class="text-2xl font-bold mt-1">0</h3>
+            </div>
+            <span class="text-2xl bg-red-600/50 p-2.5 rounded-xl">🚫</span>
+        </div>
+    </div>
+
+    <!-- AREA ALAT PENCARIAN & FILTER DATA -->
+    <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div class="relative w-full md:w-80">
+            <input type="text" id="searchKaryawan" placeholder="Cari nama, username, atau no karyawan..." class="w-full p-2.5 pl-9 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+            <span class="absolute left-3 top-3 text-gray-400 text-sm">🔍</span>
+        </div>
+        <div class="flex gap-2 w-full md:w-auto">
+            <select id="filterStatus" class="w-1/2 md:w-40 p-2.5 border rounded-xl outline-none text-sm focus:ring-2 focus:ring-blue-400">
+                <option value="ALL">Semua Status</option>
+                <option value="PENDING">Pending (Belum Approve)</option>
+                <option value="APPROVED">Aktif (Approved)</option>
+                <option value="BLOCKED">Diblokir (Blocked)</option>
+            </select>
+            <select id="filterLevel" class="w-1/2 md:w-40 p-2.5 border rounded-xl outline-none text-sm focus:ring-2 focus:ring-blue-400">
+                <option value="ALL">Semua Level</option>
+                <option value="2">Level 2</option>
+                <option value="3">Level 3</option>
+                <option value="4">Level 4</option>
+                <option value="5">Level 5</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- WADAH UTAMA TABEL MANAJEMEN DATA KARYAWAN -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto w-full">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
+                        <th class="p-4 w-12 text-center">No</th>
+                        <th class="p-4">Profil Karyawan</th>
+                        <th class="p-4">Kontak / Email</th>
+                        <th class="p-4 text-center">Akses Level</th>
+                        <th class="p-4 text-center">Status Akses</th>
+                        <th class="p-4 text-center w-48">Tindakan / Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelKaryawanBody" class="divide-y divide-gray-100 text-gray-700">
+                    <!-- Data baris karyawan akan disuntikkan secara dinamis oleh JavaScript -->
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-gray-400">
+                            <div class="animate-pulse flex flex-col items-center justify-center">
+                                <span class="text-2xl mb-1">⏳</span> Memuat data hirarki bawahan...
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+<!-- =================================================== -->
+<!-- LOGIKA JAVASCRIPT MANAJEMEN USER                    -->
+<!-- =================================================== -->
+<script>
+    // Pastikan data master dari dashboard induk terbaca dengan baik
+    if (typeof userProfile === 'undefined') {
+        window.location.href = "../dashboard.html";
+    }
+
+    let listDataKaryawan = [];
+
+    // --- FUNGSIONALITAS UTAMA: AMBIL DATA DARI BACKEND ---
+    async function ambilDataUserBawahan() {
+        const tbody = document.getElementById('tabelKaryawanBody');
+        
+        // Tembak aksi ke server Apps Script lewat fungsi terpusat dashboard
+        const res = await panggilGAS("getUserList", { level_login: userProfile.level });
+        
+        if (res && res.status === "success") {
+            listDataKaryawan = res.data;
+            hitungDanTampilkanSummary(listDataKaryawan);
+            renderTabelKaryawan(listDataKaryawan);
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-8 text-center text-red-500 font-medium">
+                        ⚠️ Gagal memuat data dari server database: ${res ? res.message : 'Koneksi Terputus'}
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    // --- FUNGSIONALITAS MENGHITUNG STATISTIK RINGKASAN ---
+    function hitungDanTampilkanSummary(data) {
+        document.getElementById('countTotalBawahan').innerText = data.length;
+        
+        const pending = data.filter(u => u.status_approved === false || u.status_approved === "FALSE").length;
+        document.getElementById('countPendingApprove').innerText = pending;
+        
+        const blocked = data.filter(u => u.status_blocked === true || u.status_blocked === "TRUE").length;
+        document.getElementById('countTotalBlocked').innerText = blocked;
+    }
+
+    // --- FUNGSIONALITAS FILTER MULTI-PARAMETER REAL-TIME ---
+    function jalankanSistemFilterData() {
+        const keyword = document.getElementById('searchKaryawan').value.toLowerCase().trim();
+        const statusVal = document.getElementById('filterStatus').value;
+        const levelVal = document.getElementById('filterLevel').value;
+
+        const dataTerfilter = listDataKaryawan.filter(user => {
+            // 1. Filter Pencarian Teks
+            const matchKeyword = 
+                user.nama.toLowerCase().includes(keyword) || 
+                user.username.toLowerCase().includes(keyword) || 
+                user.no_karyawan.toString().toLowerCase().includes(keyword);
+
+            // 2. Filter Berdasarkan Status Akses
+            let matchStatus = true;
+            const isApproved = user.status_approved === true || user.status_approved === "TRUE";
+            const isBlocked = user.status_blocked === true || user.status_blocked === "TRUE";
+
+            if (statusVal === "PENDING") matchStatus = !isApproved && !isBlocked;
+            else if (statusVal === "APPROVED") matchStatus = isApproved && !isBlocked;
+            else if (statusVal === "BLOCKED") matchStatus = isBlocked;
+
+            // 3. Filter Berdasarkan Tingkatan Level
+            let matchLevel = true;
+            if (levelVal !== "ALL") {
+                matchLevel = user.level.toString() === levelVal;
+            }
+
+            return matchKeyword && matchStatus && matchLevel;
+        });
+
+        renderTabelKaryawan(dataTerfilter);
+    }
+
+    // Pasang Event Listener untuk mendeteksi perubahan input filter secara instan
+    document.getElementById('searchKaryawan').addEventListener('input', jalankanSistemFilterData);
+    document.getElementById('filterStatus').addEventListener('change', jalankanSistemFilterData);
+    document.getElementById('filterLevel').addEventListener('change', jalankanSistemFilterData);
+</script>
+
+<script>
+    // --- FUNGSIONALITAS UTAMA RENDERING BARIS TABEL DINAMIS ---
+    function renderTabelKaryawan(dataKaryawan) {
+        const tbody = document.getElementById('tabelKaryawanBody');
+        tbody.innerHTML = "";
+
+        if (dataKaryawan.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-8 text-center text-gray-400 font-medium">
+                        📭 Tidak ada data karyawan bawahan yang cocok dengan kriteria filter.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        dataKaryawan.forEach((karyawan, index) => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-gray-50/50 transition duration-150";
+
+            // Status Konfigurasi Logis
+            const isApproved = karyawan.status_approved === true || karyawan.status_approved === "TRUE";
+            const isBlocked = karyawan.status_blocked === true || karyawan.status_blocked === "TRUE";
+            const levelLoginUser = Number(userProfile.level);
+            const levelTargetKaryawan = Number(karyawan.level);
+
+            // 1. Pembuatan Avatar Lingkaran Profil
+            let avatarHTML = `
+                <div class="w-10 h-10 rounded-full bg-blue-500 text-white font-bold flex items-center justify-center text-sm shadow-inner uppercase">
+                    ${karyawan.nama.charAt(0)}
+                </div>
+            `;
+            if (karyawan.foto_drive_id && karyawan.foto_drive_id !== "DRIVE_ERR" && karyawan.foto_drive_id !== "ERROR_DRIVE_UPLOAD") {
+                avatarHTML = `
+                    <img src="https://googleusercontent.com{karyawan.foto_drive_id}" class="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-200" alt="Avatar">
+                `;
+            }
+
+            // 2. Pembuatan Badge Status Visual
+            let badgeStatus = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">✅ Aktif</span>';
+            if (isBlocked) {
+                badgeStatus = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">🚫 Diblokir</span>';
+            } else if (!isApproved) {
+                badgeStatus = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 border-dashed">⏳ Pending</span>';
+            }
+
+            // 3. LOGIKA INTEGRITAS SENSOR AKSI PRIVILEGE (POIN 8)
+            // Tombol manipulasi hanya diizinkan render jika level target LEBIH RENDAH dibanding level login
+            let komponenAksiHTML = `<span class="text-xs text-gray-400 italic">Otoritas Tidak Diizinkan</span>`;
+
+            if (levelLoginUser < levelTargetKaryawan) {
+                const teksTombolApprove = isApproved ? "De-activate" : "Approve";
+                const warnaTombolApprove = isApproved ? "bg-amber-500 hover:bg-amber-600" : "bg-green-600 hover:bg-green-700";
+                
+                const teksTombolBlock = isBlocked ? "Un-block" : "Block";
+                const warnaTombolBlock = isBlocked ? "bg-gray-500 hover:bg-gray-600" : "bg-red-600 hover:bg-red-700";
+
+                // Opsi Dropdown Pengaturan Level Sesuai Hak Atasan (Poin 5 & 6)
+                // Hanya boleh meletakkan orang di level privilage di bawah level user sekarang login
+                let opsiLevelHTML = "";
+                for (let lvl = levelLoginUser + 1; lvl <= 5; lvl++) {
+                    const selected = levelTargetKaryawan === lvl ? "selected" : "";
+                    opsiLevelHTML += `<option value="${lvl}" ${selected}>Lvl ${lvl}</option>`;
+                }
+
+                komponenAksiHTML = `
+                    <div class="flex flex-col gap-1.5 justify-center">
+                        <div class="flex gap-1">
+                            <button onclick="eksekusiAksiKaryawan('toggleApprove', '${karyawan.username}', ${!isApproved})" class="${warnaTombolApprove} text-white text-[11px] font-semibold px-2 py-1 rounded-md transition shadow-xs cursor-pointer border-none outline-none">${teksTombolApprove}</button>
+                            <button onclick="eksekusiAksiKaryawan('toggleBlock', '${karyawan.username}', ${!isBlocked})" class="${warnaTombolBlock} text-white text-[11px] font-semibold px-2 py-1 rounded-md transition shadow-xs cursor-pointer border-none outline-none">${teksTombolBlock}</button>
+                        </div>
+                        <select onchange="eksekusiAksiKaryawan('changeLevel', '${karyawan.username}', this.value)" class="w-full text-[11px] p-1 border rounded-md outline-none bg-gray-50 focus:ring-1 focus:ring-blue-400 text-center font-medium">
+                            ${opsiLevelHTML}
+                        </select>
+                    </div>
+                `;
+            }
+
+            // Konstruksi Gabungan Baris Data Tabel
+            tr.innerHTML = `
+                <td class="p-4 text-center font-bold text-gray-400">${index + 1}</td>
+                <td class="p-4">
+                    <div class="flex items-center gap-3">
+                        ${avatarHTML}
+                        <div>
+                            <div class="font-bold text-gray-800 text-sm leading-tight">${karyawan.nama}</div>
+                            <div class="text-xs text-gray-400 mt-0.5">@${karyawan.username} | ID: ${karyawan.no_karyawan}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="p-4">
+                    <div class="font-medium text-gray-600 text-xs">${karyawan.email}</div>
+                    <div class="text-[11px] text-gray-400 mt-0.5">📱 ${karyawan.no_telepon}</div>
+                </td>
+                <td class="p-4 text-center">
+                    <span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-md border border-blue-100 shadow-3xs">Level ${karyawan.level}</span>
+                </td>
+                <td class="p-4 text-center">${badgeStatus}</td>
+                <td class="p-4 text-center">${komponenAksiHTML}</td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // --- FUNGSIONALITAS EKSEKUSI PEMBARUAN STATUS PRIVILEGE KE API ---
+    async function eksekusiAksiKaryawan(jenisAksi, targetUsername, nilaiBaru) {
+        if (!confirm(`Konfirmasi: Apakah Anda yakin ingin melakukan tindakan ${jenisAksi} pada akun @${targetUsername}?`)) return;
+
+        // Kirim permintaan perubahan data ke server terpusat menggunakan standarisasi payload
+        const res = await panggilGAS("approveUser", {
+            subAction: jenisAksi,
+            targetUser: targetUsername,
+            value: nilaiBaru
+        });
+
+        if (res && res.status === "success") {
+            alert("Sistem Berhasil Perbarui Data: " + res.message);
+            ambilDataUserBawahan(); // Muat ulang isi tabel data agar sinkron secara real-time
+        } else {
+            alert("Gagal memproses tindakan: " + (res ? res.message : "Putus Jaringan"));
+        }
+    }
+
+    // Pemicu inisialisasi pemuatan muat data otomatis saat file disuntikkan ke viewport
+    ambilDataUserBawahan();
+</script>

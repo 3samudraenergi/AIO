@@ -88,7 +88,7 @@
     <script>
         // PASTIKAN URL DI BAWAH INI ADALAH URL DEPLOYMENT APPS SCRIPT TERBARU ANDA
         const APPS_SCRIPT_URL = 
-        "https://script.google.com/macros/s/AKfycbxmTx-0xTmtoFso6bENDBe8PtauohiN-dDgLlobGqiIhJWAwD4r8hriA7_UbA3pp1w/exec";
+        "https://script.google.com/macros/s/AKfycbyEItHQ_Bv-S9iohKgWVy2ZIJJ9jyRfHweogi4aQm1oEh5uFhbeIN_nMmnpPtUegcFB/exec";
 
         // --- LAPIS PROTEKSI AWAL: KICK OUT TANPA SESI (SISI CLIENT) ---
         if (localStorage.getItem("isLoggedIn") !== "TRUE" || !localStorage.getItem("userSessionData")) {
@@ -198,31 +198,51 @@
         }
 
         // --- FUNGSIONALITAS ROUTER VIEWPORT HALAMAN (Poin 12 - 16) ---
-        function bukaHalamanKonten(namaMenu, targetPage) {
+        // --- SELESAI SINKRONISASI: AJAX VIEW ROUTER ENGINE ---
+                // --- SELESAI SINKRONISASI: AJAX VIEW ROUTER ENGINE ---
+        async function bukaHalamanKonten(namaMenu, targetPage) {
             pageTitle.innerText = namaMenu;
+            
+            // Tampilkan animasi loading saat mengunduh halaman dari GitHub Views
             mainViewport.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-12">
                     <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
-                    <p class="text-sm text-gray-500">Membuka halaman ${namaMenu}...</p>
+                    <p class="text-sm text-gray-500">Memuat modul ${namaMenu}...</p>
                 </div>
             `;
 
-            // Struktur Scalable: Untuk saat ini kita memunculkan mock container.
-            // Di tahap berikutnya, fungsi ini akan melakukan fetch() file HTML dari GitHub views/ folder Anda.
-            setTimeout(() => {
+            try {
+                // Ambil file HTML terpisah dari folder views/ secara dinamis
+                const response = await fetch(targetPage);
+                if (!response.ok) throw new Error(`Halaman ${namaMenu} gagal diunduh dari server.`);
+                
+                const htmlContent = await response.text();
+                
+                // 1. Suntikkan struktur HTML ke dalam wadah Viewport Utama
+                mainViewport.innerHTML = htmlContent;
+
+                // 2. TRICKY COMPONENT: Paksa browser mengeksekusi tag <script> yang ada di dalam berkas views
+                const scripts = mainViewport.getElementsByTagName('script');
+                for (let i = 0; i < scripts.length; i++) {
+                    const scriptElement = document.createElement('script');
+                    scriptElement.text = scripts[i].text;
+                    document.head.appendChild(scriptElement).parentNode.removeChild(scriptElement);
+                }
+                
+                console.log(`[ROUTER] Sukses memuat dan mengaktifkan halaman: ${targetPage}`);
+            } catch (err) {
+                // Tampilkan pesan error jika file views/ belum dibuat di GitHub
                 mainViewport.innerHTML = `
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">Halaman: ${namaMenu}</h3>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            Modul halaman kerja untuk <b>${targetPage}</b> berhasil di-routing secara dinamis berdasarkan otorisasi Level ${userProfile.level}.
-                        </p>
-                        <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 font-medium">
-                            Status Koneksi: Terhubung Aman dengan Sesi Token ${userProfile.sessionId.substring(0,8)}...
-                        </div>
+                    <div class="bg-red-50 border border-red-200 p-6 rounded-2xl text-center">
+                        <span class="text-3xl">⚠️</span>
+                        <h4 class="text-md font-bold text-red-800 mt-2">Gagal Membuka Halaman</h4>
+                        <p class="text-sm text-red-600 mt-1">${err.message}</p>
+                        <p class="text-xs text-gray-400 mt-4">Pastikan file <b>${targetPage}</b> sudah di-commit di repositori GitHub Anda.</p>
                     </div>
                 `;
-            }, 400000 / 100000); // Simulasi render transisi 400ms
+            }
         }
+
         // --- FUNGSIONALITAS KONTROL SIDEBAR UI DI HP ---
         function bukaSidebarHP() {
             sidebarMenu.style.transform = "translateX(0)";
