@@ -22,76 +22,91 @@
     <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md flex flex-col items-center">
         <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Form Pendaftaran Baru</h3>
         
-        <!-- Area Ambil Gambar Wajah -->
-        <div id="canvasBox" class="bg-gray-200 mb-2 flex items-center justify-center">
-            <video id="webcam" autoplay playsinline></video>
-            <img id="photoPreview" class="hidden" alt="Preview">
-        </div>
-        <button type="button" id="btnAmbilFoto" class="mb-4 bg-green-600 text-white text-xs px-4 py-1.5 rounded-full hover:bg-green-700 transition shadow-sm">
-            Kunci Foto Profil Anda
-        </button>
-        
         <form id="registerForm" class="w-full space-y-3">
-            <div>
-                <label class="block text-xs font-medium text-gray-600">No. Karyawan</label>
-                <input type="text" id="no_karyawan" required class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-600">Nama Lengkap</label>
-                <input type="text" id="nama" required class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-600">No. Telepon / WA</label>
-                <input type="tel" id="no_telepon" required class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-            </div>
+            
+            <!-- STEP 1: VERIFIKASI EMAIL (SELALU TAMPIL DI AWAL) -->
             <div>
                 <label class="block text-xs font-medium text-gray-600">Email Gmail</label>
                 <div class="flex gap-2 mt-1">
-                    <input type="email" id="email" required class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-                    <button type="button" id="btnKirimOTP" class="bg-blue-600 text-white text-xs px-3 rounded-lg hover:bg-blue-700 transition whitespace-nowrap">Kirim OTP</button>
+                    <input type="email" id="email" required class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100 disabled:text-gray-500">
+                    <button type="button" id="btnKirimOTP" class="bg-blue-600 text-white text-xs px-3 rounded-lg hover:bg-blue-700 transition whitespace-nowrap shadow-sm">Kirim OTP</button>
                 </div>
             </div>
+
+            <!-- STEP 2: INPUT OTP (MUNCUL SETELAH EMAIL SUKSES TERCATAT) -->
             <div id="otpBox" class="hidden" style="display: none;">
                 <label class="block text-xs font-medium text-blue-600">Masukkan 6 Digit OTP (Verified)</label>
                 <input type="text" id="otp_code" maxlength="6" class="mt-1 w-full p-2 border border-blue-400 rounded-lg bg-blue-50 text-center font-bold tracking-widest text-lg outline-none">
             </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-600">Username</label>
-                <input type="text" id="username" required class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-600">Password</label>
-                <input type="password" id="password" required class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
+
+            <!-- STEP 3: SISA FORMULIR & MODUL KAMERA (TERKUNCI TERSEMBUNYI DI AWAL) -->
+            <div id="formLanjutanBox" class="hidden space-y-3 pt-2 border-t border-gray-100" style="display: none;">
+                
+                <!-- Area Ambil Gambar Wajah -->
+                <div class="flex flex-col items-center my-2">
+                    <div id="canvasBox" class="bg-gray-200 mb-2 flex items-center justify-center">
+                        <video id="webcam" autoplay playsinline></video>
+                        <img id="photoPreview" class="hidden" alt="Preview">
+                    </div>
+                    <button type="button" id="btnAmbilFoto" class="bg-green-600 text-white text-xs px-4 py-1.5 rounded-full hover:bg-green-700 transition shadow-sm">
+                        Kunci Foto Profil Anda
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">No. Karyawan</label>
+                    <input type="text" id="no_karyawan" class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Nama Lengkap</label>
+                    <input type="text" id="nama" class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">No. Telepon / WA</label>
+                    <input type="tel" id="no_telepon" class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Username</label>
+                    <input type="text" id="username" class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Password (Minimal 6 Karakter)</label>
+                    <input type="password" id="password" class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
             </div>
 
-            <!-- Tombol Aksi Batal dan Submit -->
+            <!-- TOMBOL AKSI UTAMA -->
             <div class="flex gap-2 pt-2">
-                <a href="index.html" class="w-1/2 bg-gray-200 text-gray-700 p-3 rounded-lg font-semibold hover:bg-gray-300 transition text-center">
+                <a href="index.html" id="btnCancel" class="w-1/2 bg-gray-200 text-gray-700 p-3 rounded-lg font-semibold hover:bg-gray-300 transition text-center shadow-sm">
                     Cancel
                 </a>
-                <button type="submit" id="btnDaftar" class="w-1/2 bg-gray-400 text-white p-3 rounded-lg font-semibold transition" disabled>
+                <button type="submit" id="btnDaftar" class="w-1/2 bg-gray-400 text-white p-3 rounded-lg font-semibold transition shadow-sm" disabled style="display: none;">
                     Submit
                 </button>
             </div>
         </form>
     </div>
-
+    <!-- =================================================== -->
+    <!-- LOGIKA JAVASCRIPT PENGENDAALUR REGISTRASI STABIL    -->
+    <!-- =================================================== -->
     <script>
-        // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKFKDqWOTVU-tt-QnICLlgquR_qTT5IRc4Dqg0lw_F5bI51xs8efJAum6Meq_n09tf/exec";
+        // PASTIKAN URL DI BAWAH INI ADALAH URL DEPLOYMENT APPS SCRIPT TERBARU ANDA
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqlxOBS_uEXzJ5s4xmtjIM0MNMmNNvDdyEiJ2IQ3djIPGNXpt-yt8vM4_saUnXuJjO/exec";
+
         const video = document.getElementById('webcam');
         const photoPreview = document.getElementById('photoPreview');
         const btnAmbilFoto = document.getElementById('btnAmbilFoto');
+        const btnKirimOTP = document.getElementById('btnKirimOTP');
+        const btnDaftar = document.getElementById('btnDaftar');
+        
+        const emailInput = document.getElementById('email');
+        const otpBox = document.getElementById('otpBox');
+        const formLanjutanBox = document.getElementById('formLanjutanBox');
+        
         let fotoBase64 = "";
+        let streamKamera = null;
 
-        async function jalankanKamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
-                video.srcObject = stream;
-            } catch (err) { alert("Kamera gagal dimuat."); }
-        }
-        window.addEventListener('DOMContentLoaded', jalankanKamera);
-
+        // --- ENKRIPSI AMAN CRYPTO SHA-256 SISI KLIEN ---
         async function sha256(string) {
             const utf8 = new TextEncoder().encode(string);
             const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
@@ -99,83 +114,155 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        // --- SISTEM INTI KONTROL FUNGSIONALITAS STREAMING KAMERA ---
+        async function jalankanKamera() {
+            try {
+                streamKamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+                video.srcObject = streamKamera;
+            } catch (err) { 
+                alert("Sistem gagal memuat kamera Anda. Izinkan akses kamera pada pengaturan browser."); 
+            }
+        }
+
         btnAmbilFoto.addEventListener('click', () => {
             if (video.classList.contains('hidden')) {
-                fotoBase64 = ""; photoPreview.classList.add('hidden'); video.classList.remove('hidden');
-                btnAmbilFoto.innerText = "Kunci Foto Profil Anda"; btnAmbilFoto.className = "mb-4 bg-green-600 text-white text-xs px-4 py-1.5 rounded-full hover:bg-green-700 transition shadow-sm";
+                fotoBase64 = ""; 
+                photoPreview.classList.add('hidden'); 
+                video.classList.remove('hidden');
+                btnAmbilFoto.innerText = "Kunci Foto Profil Anda"; 
+                btnAmbilFoto.className = "bg-green-600 text-white text-xs px-4 py-1.5 rounded-full hover:bg-green-700 transition shadow-sm";
                 return;
             }
             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
+            canvas.width = video.videoWidth || 640; 
+            canvas.height = video.videoHeight || 480;
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            fotoBase64 = canvas.toDataURL('image/jpeg'); photoPreview.src = fotoBase64;
-            video.classList.add('hidden'); photoPreview.classList.remove('hidden');
-            btnAmbilFoto.innerText = "Ambil Ulang Foto"; btnAmbilFoto.className = "mb-4 bg-orange-500 text-white text-xs px-4 py-1.5 rounded-full hover:bg-orange-600 transition shadow-sm";
+            
+            fotoBase64 = canvas.toDataURL('image/jpeg'); 
+            photoPreview.src = fotoBase64;
+            
+            video.classList.add('hidden'); 
+            photoPreview.classList.remove('hidden');
+            btnAmbilFoto.innerText = "Ambil Ulang Foto"; 
+            btnAmbilFoto.className = "bg-orange-500 text-white text-xs px-4 py-1.5 rounded-full hover:bg-orange-600 transition shadow-sm";
         });
 
-        document.getElementById('btnKirimOTP').addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            if(!email) return alert("Masukkan email!");
-            document.getElementById('btnKirimOTP').innerText = "Mengirim...";
+        // --- TAHAP 1: KIRIM & VERIFIKASI EMAIL GMAIL ---
+        btnKirimOTP.addEventListener('click', async () => {
+            const emailValue = emailInput.value.trim();
+            if(!emailValue || !emailInput.checkValidity()) {
+                return alert("Mohon masukkan alamat email Gmail yang valid!");
+            }
+
+            btnKirimOTP.innerText = "Memproses...";
+            btnKirimOTP.setAttribute('disabled', true);
+            
             try {
-                // Perbaikan: Menambahkan headers text/plain agar kebal terhadap cekatan CORS browser
                 const response = await fetch(APPS_SCRIPT_URL, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'sendOTP', email: email }) 
+                    body: JSON.stringify({ action: 'sendOTP', email: emailValue }) 
                 });
                 const result = await response.json();
+                
                 if (result.status === "SUCCESS") {
                     alert(result.message);
-                    document.getElementById('otpBox').classList.remove('hidden');
-                    document.getElementById('otpBox').style.display = "block";
-                    const btnDaftar = document.getElementById('btnDaftar');
-                    btnDaftar.removeAttribute('disabled'); 
+                    
+                    // Kunci elemen Email & Hilangkan Tombol Kirim OTP sesuai instruksi logika Anda
+                    emailInput.setAttribute('disabled', true);
+                    btnKirimOTP.style.display = "none";
+                    btnKirimOTP.classList.add('hidden');
+                    
+                    // Tampilkan inputan kode verifikasi OTP
+                    otpBox.classList.remove('hidden');
+                    otpBox.style.display = "block";
+                    
+                    // Tampilkan seluruh sisa form input data & jalankan modul streaming kamera
+                    formLanjutanBox.classList.remove('hidden');
+                    formLanjutanBox.style.display = "block";
+                    
+                    // Aktifkan Tombol Submit secara fisik di layar
+                    btnDaftar.removeAttribute('disabled');
+                    btnDaftar.style.display = "block";
                     btnDaftar.className = "w-1/2 bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md";
-                } 
-                else { alert(result.message); }
+                    
+                    // Buka aliran kamera profil
+                    jalankanKamera();
+                    
+                    // Pasang status required pada form lanjutan yang baru terbuka
+                    document.getElementById('no_karyawan').setAttribute('required', true);
+                    document.getElementById('nama').setAttribute('required', true);
+                    document.getElementById('no_telepon').setAttribute('required', true);
+                    document.getElementById('username').setAttribute('required', true);
+                    document.getElementById('password').setAttribute('required', true);
+                } else { 
+                    alert("Penolakan Server: " + result.message); 
+                    btnKirimOTP.innerText = "Kirim OTP"; 
+                    btnKirimOTP.removeAttribute('disabled');
+                }
             } catch (e) { 
-                alert("Terjadi gangguan membaca respons, mohon cek kotak masuk email Gmail Anda dalam 1 menit!"); 
-                document.getElementById('otpBox').classList.remove('hidden');
-                document.getElementById('otpBox').style.display = "block";
-                const btnDaftar = document.getElementById('btnDaftar');
-                btnDaftar.removeAttribute('disabled'); 
-                btnDaftar.className = "w-1/2 bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md"; 
-            } finally { 
-                document.getElementById('btnKirimOTP').innerText = "Kirim OTP"; 
+                alert("Gagal melakukan verifikasi awal. Periksa status deployment server database Anda."); 
+                btnKirimOTP.innerText = "Kirim OTP"; 
+                btnKirimOTP.removeAttribute('disabled');
             }
         });
 
+        // --- TAHAP 2: PROSES VALIDASI AKHIR & SUBMIT DATA ---
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if(!fotoBase64) return alert("Ambil foto profil terlebih dahulu!");
             
-            const passwordHashed = await sha256(document.getElementById('password').value);
+            // Validasi Pertahanan 1: Wajib Ambil Foto Profil
+            if(!fotoBase64) {
+                return alert("Pendaftaran Ditolak: Anda wajib mengambil dan mengunci foto profil di dalam lingkaran terlebih dahulu!");
+            }
+            
+            // Validasi Pertahanan 2: Panjang Karakter Password Minimal 6 Digit
+            const passwordMentah = document.getElementById('password').value;
+            if(passwordMentah.length < 6) {
+                return alert("Pendaftaran Ditolak: Password Anda terlalu pendek! Diwajibkan minimal berisi 6 karakter.");
+            }
+
+            const passwordHashed = await sha256(passwordMentah);
             const payload = {
                 action: 'register',
                 no_karyawan: document.getElementById('no_karyawan').value,
                 nama: document.getElementById('nama').value,
                 no_telepon: document.getElementById('no_telepon').value,
-                email: document.getElementById('email').value,
-                otp: document.getElementById('otp_code').value,
-                username: document.getElementById('username').value,
+                email: emailInput.value.trim(),
+                otp: document.getElementById('otp_code').value.trim(),
+                username: document.getElementById('username').value.trim(),
                 password_hash: passwordHashed,
                 fotoBase64: fotoBase64
             };
 
-            document.getElementById('btnDaftar').innerText = "Proses...";
+            btnDaftar.innerText = "Memproses Pendaftaran...";
+            btnDaftar.setAttribute('disabled', true);
+            
             try {
                 const response = await fetch(APPS_SCRIPT_URL, { 
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload) });
+                    body: JSON.stringify(payload) 
+                });
                 const result = await response.json();
+                
                 if (result.status === "SUCCESS") {
-                    // JIKA BERHASIL, DIALIKAN KE HALAMAN PENDING APPROVAL
+                    alert("Akun Anda berhasil didaftarkan!");
+                    // Matikan track aliran kamera sebelum pindah halaman agar lampu kamera HP/Laptop mati
+                    if (streamKamera) {
+                        streamKamera.getTracks().forEach(track => track.stop());
+                    }
                     window.location.href = "pending.html";
-                } else { alert(result.message); }
+                } else { 
+                    alert("Gagal Menyimpan Data: " + result.message); 
+                    btnDaftar.innerText = "Submit";
+                    btnDaftar.removeAttribute('disabled');
+                }
             } catch (err) { 
-                // Jika data berhasil masuk namun pembacaan JSON diblokir oleh redirect Google, dialihkan ke halaman sukses pending secara aman
+                // Fallback aman dari cegatan sisa redirect CORS server Google
+                if (streamKamera) {
+                    streamKamera.getTracks().forEach(track => track.stop());
+                }
                 window.location.href = "pending.html"; 
             }
         });
