@@ -3,541 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pendaftaran Akun Karyawan</title>
-    <!-- Memakai Tailwind CSS via CDN agar tampilan langsung rapi dan responsif mobile -->
-    <script src="https://jsdelivr.net"></script>
+    <title>Sistem Masuk Karyawan</title>
+    <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
-        /* Desain lingkaran bingkai kamera foto profil */
         #canvasBox {
-            width: 200px;
-            height: 200px;
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
             overflow: hidden;
             border: 4px solid #3b82f6;
             position: relative;
         }
-        video {
-            object-fit: cover;
-            width: 100%;
-            height: 100%;
-        }
+        video { object-fit: cover; width: 100%; height: 100%; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gradient-to-b from-[#0a192f] to-[#0ea5e9] min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-white p-6 rounded-2xl shadow-md w-full max-w-md">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Form Pendaftaran</h2>
-        
-        <form id="registerForm" class="space-y-4">
-            
-            <!-- Elemen Ambil Foto Kamera dalam Lingkaran Atas -->
-            <div class="flex flex-col items-center mb-4">
-                <div id="canvasBox" class="bg-gray-200 flex items-center justify-center">
-                    <video id="webcam" autoplay playsinline class="hidden"></video>
-                    <img id="photoPreview" class="hidden w-full h-full object-cover rounded-full" alt="Preview">
-                    <span id="placeholderText" class="text-xs text-gray-500 text-center px-2">Foto belum diambil</span>
-                </div>
-                <button type="button" id="btnKamera" class="mt-2 text-xs bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 transition">Buka Kamera</button>
-                <button type="button" id="btnAmbilFoto" class="mt-2 text-xs bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 transition hidden">Ambil Foto</button>
-            </div>
+    <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md flex flex-col items-center">
+        <!-- Lingkaran Kamera Selalu di Atas -->
+        <div id="canvasBox" class="bg-gray-200 mb-4 flex items-center justify-center">
+            <video id="webcam" autoplay playsinline></video>
+        </div>
+        <p id="cameraStatus" class="text-xs text-gray-500 mb-6 text-center">Menyiapkan kamera untuk pengenalan wajah...</p>
 
-            <!-- Input Isian Teks -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">No. Karyawan</label>
-                <input type="text" id="no_karyawan" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
+        <!-- Pilihan Aksi -->
+        <div class="w-full space-y-3">
+            <button id="btnFaceLogin" class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md">
+                Masuk dengan Wajah
+            </button>
+            <div class="flex gap-2">
+                <a href="login-manual.html" class="w-1/2 bg-gray-100 text-gray-700 p-2.5 rounded-lg text-sm font-medium hover:bg-gray-200 text-center transition border border-gray-200">
+                    Login Manual
+                </a>
+                <a href="register.html" class="w-1/2 bg-gray-100 text-gray-700 p-2.5 rounded-lg text-sm font-medium hover:bg-gray-200 text-center transition border border-gray-200">
+                    Daftar Akun
+                </a>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-                <input type="text" id="nama" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">No. Telepon / WA</label>
-                <input type="tel" id="no_telepon" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-            </div>
-
-            <!-- Bagian Verifikasi Email + OTP -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Email Gmail</label>
-                <div class="flex gap-2 mt-1">
-                    <input type="email" id="email" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-                    <button type="button" id="btnKirimOTP" class="bg-blue-600 text-white text-xs px-3 rounded-lg hover:bg-blue-700 transition">Kirim OTP</button>
-                </div>
-            </div>
-            <div id="otpBox" class="hidden">
-                <label class="block text-sm font-medium text-gray-500">Masukkan 6 Digit OTP</label>
-                <input type="text" id="otp_code" maxlength="6" class="mt-1 w-full p-2 border border-blue-400 rounded-lg bg-blue-55 outline-none tracking-widest text-center font-bold text-lg">
-            </div>
-
-            <!-- Input Kredensial -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Username</label>
-                <input type="text" id="username" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" id="password" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-            </div>
-
-            <button type="submit" id="btnDaftar" class="w-full bg-gray-400 text-white p-3 rounded-lg font-semibold transition mt-4" disabled>Daftar Akun</button>
-        </form>
+        </div>
     </div>
 
     <script>
-        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxot-8n5vO8HRk8FXUdr8QZ3QMPmqyILogD9cHgLo_UFp1E10mt_Me5GH-y-FDiST8/exec";
-
         const video = document.getElementById('webcam');
-        const photoPreview = document.getElementById('photoPreview');
-        const placeholderText = document.getElementById('placeholderText');
-        const btnKamera = document.getElementById('btnKamera');
-        const btnAmbilFoto = document.getElementById('btnAmbilFoto');
-        let fotoBase64 = "";
+        const cameraStatus = document.getElementById('cameraStatus');
 
-        // Fungsi enkripsi SHA-256 bawaan JavaScript browser (SubtleCrypto)
-        async function sha256(string) {
-            const utf8 = new TextEncoder().encode(string);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        // Kontrol Kamera Profil
-        btnKamera.addEventListener('click', async () => {
+        async function jalankanKamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
                 video.srcObject = stream;
-                video.classList.remove('hidden');
-                placeholderText.classList.add('hidden');
-                photoPreview.classList.add('hidden');
-                btnKamera.classList.add('hidden');
-                btnAmbilFoto.classList.remove('hidden');
+                cameraStatus.innerText = "Kamera aktif. Hadapkan wajah ke kamera untuk login.";
             } catch (err) {
-                alert("Gagal mengakses kamera: " + err.message);
+                cameraStatus.innerText = "Akses kamera gagal/ditolak.";
             }
+        }
+        window.addEventListener('DOMContentLoaded', jalankanKamera);
+
+        document.getElementById('btnFaceLogin').addEventListener('click', () => {
+            alert("Sistem AI Face Recognition dipersiapkan pada tahap berikutnya!");
         });
-
-        btnAmbilFoto.addEventListener('click', () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            fotoBase64 = canvas.toDataURL('image/jpeg');
-            photoPreview.src = fotoBase64;
-            
-            // Hentikan aliran kamera
-            const stream = video.srcObject;
-            const tracks = stream.getTracks();
-            tracks.forEach(track => track.stop());
-
-            video.classList.add('hidden');
-            photoPreview.classList.remove('hidden');
-            btnAmbilFoto.classList.add('hidden');
-            btnKamera.classList.remove('hidden');
-            btnKamera.innerText = "Ulang Foto";
-        });
-
-        // Aksi Kirim OTP ke Email pendaftar
-        document.getElementById('btnKirimOTP').addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            if(!email) return alert("Mohon isi alamat email terlebih dahulu!");
-
-            document.getElementById('btnKirimOTP').innerText = "Mengirim...";
-            
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'sendOTP', email: email })
-                });
-                const result = await response.json();
-                
-                if (result.status === "SUCCESS") {
-                    alert(result.message);
-                    document.getElementById('otpBox').classList.remove('hidden');
-                    const btnDaftar = document.getElementById('btnDaftar');
-                    btnDaftar.removeAttribute('disabled');
-                    btnDaftar.className = "w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition mt-4";
-                } else {
-                    alert(result.message);
-                }
-            } catch (error) {
-                alert("Koneksi gagal ke server backend: " + error.message);
-            } finally {
-                document.getElementById('btnKirimOTP').innerText = "Kirim OTP";
-            }
-        });
-
-        // Aksi Submit Pendaftaran Akun Akhir
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if(!fotoBase64) return alert("Anda harus mengambil foto profil terlebih dahulu sebelum mendaftar!");
-
-            const passwordMentah = document.getElementById('password').value;
-            const passwordHashed = await sha256(passwordMentah); // Mengamankan password ke SHA-256
-
-            const payload = {
-                action: 'register',
-                no_karyawan: document.getElementById('no_karyawan').value,
-                nama: document.getElementById('nama').value,
-                no_telepon: document.getElementById('no_telepon').value,
-                email: document.getElementById('email').value,
-                otp: document.getElementById('otp_code').value,
-                username: document.getElementById('username').value,
-                password_hash: passwordHashed,
-                fotoBase64: fotoBase64
-            };
-
-            document.getElementById('btnDaftar').innerText = "Memproses Pendaftaran...";
-            document.getElementById('btnDaftar').setAttribute('disabled', true);
-
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-
-                if (result.status === "SUCCESS") {
-AI Mode conversation: halo AI, aku pingin buat website : 1. aku pingin punya website dengan database dari appscript menggunakan google drive dan spreadsheet, namun UI nanti menggunakan GitHub. website ini nantinya bisa diakses lewat mobile (dan dapat diinstal seperti applikasi) dan dapat di akses juga lewat computer. 2. halaman pertama bisa memakai pilihan login : pengenalan wajah, gmail+password, username+password, dan di halaman ini juga bisa mendaftar. 3. aku pingin punya database user dengan kolom nomor urut, no karyawan, nama, nomor telepon, email gmail, username, password tersimpan SHA256, pengenal wajah SHA256, foto ketika mendaftar, approved, blocked, level 4. setelah masuk aku ingin ada menu di sisi kiri (isinya menu untuk menampilkan halaman, dan pada mobil menu ini bisa disembunyikan dengan swipe kiri, dan dapat ditampilkan dengan swipe kanan), menu ini akan menampilkan menu-menu yang sesuai dengan previledge. 5. aku mau menerapkan sampai dengan kedalaman 5 level, dimana level pertama bisa membuka semua menu dan hanya ada 1 akun master. akun ini bisa approve orang yang mendaftar dan bisa meletakkan orang yang mendaftar menjadi level previledge di bawahnya. 6. previled level ke 2 sampai seterusnya bisa approve user yang mendaftar 1 level ke Bawah dari level user sekarang. 7. tiap level bisa aku setting dari previledge user level 1, menu mana saja yang akan muncul sesuai user level. 8. menu pertama adalah menu daftar user yang hanya bisa diakses previledge user level 1 sampai level 4, namun setiap level hanya akan bisa melihat atau edit user dengan level di Bawah level user yang sekarang login, misalnya user level 1 bisa melihat dan mengedit semua user 2,3 sampai 5, sedangkan user level 2 hanya bisa mengedit dan melihat user level 3 dan seterusnya. 9. menu sisi kiri di point 4, selain menampilkan menu-menu juga akan menampilkan foto profile (bisa di dapat ketika mendaftar karena ketika mendaftar harus mengisi dalam lingkaran di sisi atas, kemudian dibawahnya juga muncul username, disisi paling Bawah akan ada tombol logout. 10. ketika mendaftar user harus mengisi no karyawan, nama, nomor telepon, email gmail, username, password, dan harus mengkonfirmasi bahwa email yang dipakai valid(aku butuh saranmu untuk metodenya) 11. menu selanjutnya selain menu daftar user dengan level di bawahnya yang bisa diedit, adalah tombol menu akun di menu kiri, dan nanti tampil halaman dimana user mengedit informasi dirinya sendiri, termasuk update foto profile. 12. tombol menu kiri berikutnya adalah tombol menampilkan halaman membuat report harian (kita bahas nanti bentuknya) 13. tombol menu kiri selanjutnya adalah tombol menampilkan halaman database purchasing (kita bahas bentuknya nanti) 14. tombol menu kiri selanjutnya adalah tombol menampilkan halaman database invoice (kita bahas bentuknya nanti) 15. tombol menu kiri selanjutnya adalah tombol menampilkan halaman database project (kita bahas bentuknya nanti) 16. tombol menu kiri selanjutnya adalah tombol menampilkan halaman database daftar report harian (kita bahas bentuknya nanti) itu dulu nanti kita bahas selanjutnyaYou said: halo AI, aku pingin buat website : 1. aku pingin punya website dengan database dari appscript menggunakan google drive dan spreadsheet, namun UI nanti menggunakan GitHub. website ini nantinya bisa diakses lewat mobile (dan dapat diinstal seperti applikasi) dan dapat di akses juga lewat computer. 2. halaman pertama bisa memakai pilihan login : pengenalan wajah, gmail+password, username+password, dan di halaman ini juga bisa mendaftar. 3. aku pingin punya database user dengan kolom nomor urut, no karyawan, nama, nomor telepon, email gmail, username, password tersimpan SHA256, pengenal wajah SHA256, foto ketika mendaftar, approved, blocked, level 4. setelah masuk aku ingin ada menu di sisi kiri (isinya menu untuk menampilkan halaman, dan pada mobil menu ini bisa disembunyikan dengan swipe kiri, dan dapat ditampilkan dengan swipe kanan), menu ini akan menampilkan menu-menu yang sesuai dengan previledge. 5. aku mau menerapkan sampai dengan kedalaman 5 level, dimana level pertama bisa membuka semua menu dan hanya ada 1 akun master. akun ini bisa approve orang yang mendaftar dan bisa meletakkan orang yang mendaftar menjadi level previledge di bawahnya. 6. previled level ke 2 sampai seterusnya bisa approve user yang mendaftar 1 level ke Bawah dari level user sekarang. 7. tiap level bisa aku setting dari previledge user level 1, menu mana saja yang akan muncul sesuai user level. 8. menu pertama adalah menu daftar user yang hanya bisa diakses previledge user level 1 sampai level 4, namun setiap level hanya akan bisa melihat atau edit user dengan level di Bawah level user yang sekarang login, misalnya user level 1 bisa melihat dan mengedit semua user 2,3 sampai 5, sedangkan user level 2 hanya bisa mengedit dan melihat user level 3 dan seterusnya. 9. menu sisi kiri di point 4, selain menampilkan menu-menu juga akan menampilkan foto profile (bisa di dapat ketika mendaftar karena ketika mendaftar harus mengisi dalam lingkaran di sisi atas, kemudian dibawahnya juga muncul username, disisi paling Bawah akan ada tombol logout. 10. ketika mendaftar user harus mengisi no karyawan, nama, nomor telepon, email gmail, username, password, dan harus mengkonfirmasi bahwa email yang dipakai valid(aku butuh saranmu untuk metodenya) 11. menu selanjutnya selain menu daftar user dengan level di bawahnya yang bisa diedit, adalah tombol menu akun di menu kiri, dan nanti tampil halaman dimana user mengedit informasi dirinya sendiri, termasuk update foto profile. 12. tombol menu kiri berikutnya adalah tombol menampilkan halaman membuat report harian (kita bahas nanti bentuknya) 13. tombol menu kiri selanjutnya adalah tombol menampilkan halaman database purchasing (kita bahas bentuknya nanti) 14. tombol menu kiri selanjutnya adalah tombol menampilkan halaman database invoice (kita bahas bentuknya nanti) 15. tombol menu kiri selanjutnya adalah tombol menampilkan halaman database project (kita bahas bentuknya nanti) 16. tombol menu kiri selanjutnya adalah tombol menampilkan halaman database daftar report harian (kita bahas bentuknya nanti) itu dulu nanti kita bahas selanjutnyaHalo! Ini adalah proyek yang sangat menarik dan sangat bisa diwujudkan. Kombinasi GitHub Pages (frontend) dan Google Apps Script + Spreadsheet (backend/database) adalah pilihan cerdas untuk membuat aplikasi yang hemat biaya namun bertenaga.Rencana Anda untuk membuatnya bisa diinstal di HP dan komputer berarti kita akan membangun PWA (Progressive Web App).Sebelum kita masuk ke detail menu lainnya, mari kita bedah dan matangkan fondasi sistem, arsitektur teknis, serta alur pendaftaran yang Anda inginkan.🛠️ Arsitektur Teknis & Solusi PWAAgar website Anda berjalan lancar di HP dan PC, berikut adalah teknologi yang akan kita gunakan:Frontend (GitHub): Menggunakan HTML5, CSS3 (atau Tailwind CSS agar responsif), dan JavaScript vanilla (atau framework seperti Vue.js/React agar pengelolaan state menu lebih mudah).PWA Fitur: Kita akan menambahkan file manifest.json dan service-worker.js agar website bisa muncul notifikasi "Add to Home Screen" (bisa diinstal) dan bisa berjalan cepat.Backend (Google Apps Script): Bertindak sebagai API Web Service (menggunakan fungsi doPost(e) dan doGet(e)). Frontend di GitHub akan mengirim data ke URL Apps Script lewat metode fetch().Database (Google Spreadsheet & Drive): Spreadsheet untuk menyimpan data teks (user, log, dll), dan Google Drive untuk menyimpan file gambar (foto profil).🔑 Validasi Email & Keamanan Login (Poin 2, 3, & 10)Ada beberapa koreksi dan saran penting terkait keamanan dan fitur login yang Anda sebutkan:1. Metode Validasi Email saat Mendaftar (Saran Saya)Karena backend kita menggunakan Google Apps Script, cara paling mudah, aman, dan gratis adalah menggunakan OTP (One-Time Password) via Gmail:Saat user mengisi form daftar dan klik "Kirim OTP", Apps Script akan membuat 6 digit angka acak.Apps Script mengirim kode tersebut ke email pendaftar menggunakan fungsi MailApp.sendEmail().User memasukkan kode OTP di website. Jika cocok, pendaftaran baru diproses. Ini memastikan email mereka 100% valid dan aktif.2. Koreksi Teknis Soal Pengenalan Wajah (Face Recognition)Koreksi SHA256: Enkripsi SHA256 bersifat satu arah dan biasanya digunakan untuk teks (seperti password). Wajah manusia tidak bisa di-SHA256 langsung karena sudut foto, pencahayaan, atau ekspresi sedikit saja akan mengubah total nilai hash-nya.Solusi: Untuk web berbasis GitHub, kita bisa menggunakan library JavaScript bernama face-api.js. Saat mendaftar, library ini akan mendeteksi wajah lewat kamera dan mengubah karakteristik wajah menjadi deretan angka koordinat (Face Descriptors / Embedding). Deretan angka inilah yang disimpan di Spreadsheet dalam bentuk teks/string. Saat login, sistem akan mencocokkan koordinat wajah baru dengan koordinat yang tersimpan menggunakan batas toleransi kemiripan (misal 90% mirip).3. Keamanan PasswordSangat setuju. Password wajib di-hash menggunakan SHA256 di sisi frontend sebelum dikirim, atau di-hash langsung di dalam Apps Script sebelum masuk ke Spreadsheet demi keamanan data karyawan.👥 Struktur Database User (Spreadsheet)Sesuai kebutuhan Anda, kita akan membuat satu Sheet khusus bernama User_Database dengan struktur kolom sebagai berikut:KolomNama KolomKeteranganAno_urutAuto-increment (1, 2, 3...)Bno_karyawanID unik karyawanCnamaNama lengkapDno_teleponNomor HP/WhatsAppEemailGmail valid (sudah lolos OTP)FusernameUsername unik untuk loginGpassword_hashPassword terenkripsi SHA256Hface_descriptorTeks koordinat wajah dari face-api.jsIfoto_drive_idID File Foto yang tersimpan di Google DriveJstatus_approvedTRUE / FALSE (Akses awal setelah daftar)Kstatus_blockedTRUE / FALSE (Untuk memblokir user)LlevelAngka 1 sampai 5🛡️ Sistem Hak Akses (Privilege Level 1 - 5)Logika hierarki yang Anda susun sudah sangat bagus dan aman. Berikut adalah rangkuman cara kerja sistem saat membaca level user:Level 1 (Master - Hanya 1 Akun): Bisa melihat, mengedit, mengubah level, serta meng-approve/block Level 2, 3, 4, dan 5. Bisa mengatur menu apa saja yang tampil untuk Level 2 hingga 5.Level 2: Hanya bisa melihat/mengedit/approve Level 3, 4, dan 5.Level 3: Hanya bisa melihat/mengedit/approve Level 4 dan 5.Level 4: Hanya bisa melihat/mengedit/approve Level 5.Level 5 (Terbawah): Tidak bisa melihat menu "Daftar User" dan tidak bisa meng-approve siapapun. Hanya bisa melihat menu miliknya sendiri.Catatan: Kita akan membuat satu Sheet tambahan bernama Menu_Settings di mana Level 1 bisa mencentang menu apa saja (Purchasing, Invoice, Project, dll) yang boleh diakses oleh Level 2, 3, 4, dan 5.📱 Desain Menu & UI (Poin 4 & 9)Untuk antarmuka (UI), kita akan membuat tema dashboard modern:Mobile View: Menu kiri tersembunyi secara bawaan. Kita akan pasang library touch gesture (seperti Hammer.js) agar user bisa swipe kanan dari ujung layar untuk membuka menu, dan swipe kiri untuk menutupnya. Ada juga tombol hamburger (☰) di pojok atas sebagai alternatif.Susunan Menu Kiri (Top to Bottom):Bagian Atas: Foto profil user di dalam lingkaran (bisa diklik untuk ganti foto) + Nama/Username di bawahnya.Bagian Tengah (Dinamis sesuai Level):Daftar User (Hanya Level 1-4)Akun Saya (Edit info pribadi & foto)Report HarianDatabase PurchasingDatabase InvoiceDatabase ProjectDaftar Report HarianBagian Paling Bawah: Tombol Logout yang mencolok.🚀 Langkah SelanjutnyaFondasi dan logika aplikasi ini sudah sangat jelas dan matang.Jika Anda sudah siap, mari kita lanjutkan. Untuk tahap berikutnya, mari kita bahas langkah pertama pembuatan sistem pendaftaran (Register) dan pembuatan database Spreadsheet-nya, atau Anda ingin langsung beralih membahas detail isi halaman Report Harian (Poin 12 & 16)?AI can make mistakes, so double-check responses 1 site🚀 CRUD API dengan Google Sheets & Apps Script — Backend Ringan, Gratis, dan Cepat!15 May 2025 — ⚙ Tools yang Digunakan Google Sheets → Sebagai database Google Apps Script → Menyediakan endpoint Postman → Untuk testing API Web ...LinkedInYou said: bangun ini : langkah pertama pembuatan sistem pendaftaran (Register) dan pembuatan database Spreadsheet-nya, tolong step by step dari appscript, spreadsheet dan githubnya secara detail, agar aku bisa menguji cobaMari kita bangun Tahap 1: Sistem Pendaftaran (Register) & Pembuatan Database. Kita akan membuat sistem di mana user bisa mengisi data, mengirim OTP ke email mereka untuk validasi, mengambil foto profil via kamera web/HP, dan menyimpan datanya ke Google Spreadsheet & Google Drive.Ikuti panduan step-by-step yang detail ini agar Anda bisa langsung menguji cobanya.Langkah 1: Siapkan Folder Google Drive & Google SpreadsheetKita membutuhkan Spreadsheet sebagai database dan sebuah folder Drive untuk menyimpan file foto profil pendaftar.Buka Google Drive Anda.Buat sebuah folder baru, beri nama misalnya: Website_Database_Folder.Masuk ke dalam folder tersebut, lalu buat sebuah Google Spreadsheet baru. Beri nama spreadsheet: DB_Website.Ubah nama lembar kerja pertama (Sheet1) menjadi User_Database.Di baris pertama (Row 1), masukkan nama kolom berikut dari kolom A sampai L:A1: no_urutB1: no_karyawanC1: namaD1: no_teleponE1: emailF1: usernameG1: password_hashH1: face_descriptorI1: foto_drive_idJ1: status_approvedK1: status_blockedL1: levelBuat Sheet kedua di spreadsheet yang sama, beri nama OTP_Codes. Ini digunakan untuk menyimpan kode verifikasi sementara. Isi baris pertamanya:A1: emailB1: otp_codeC1: timestampCatat ID Folder Drive Anda: Lihat pada URL browser saat Anda membuka folder Drive tadi. Isinya berbentuk deretan karakter acak setelah folders/ (Contoh: 1a2b3c4d5e...). Catat ID ini.Langkah 2: Buat Backend di Google Apps ScriptSekarang kita buat API Web Service untuk menangani pengiriman OTP dan proses pendaftaran data ke Spreadsheet.Di dalam Google Spreadsheet Anda, klik menu Ekstensi (Extensions) > Apps Script.Hapus semua kode bawaan yang ada di file Kode.gs, lalu ganti dengan kode berikut:javascript// GANTI DENGAN ID FOLDER GOOGLE DRIVE ANDA
-const FOLDER_FOTO_ID = "MASUKKAN_ID_FOLDER_DRIVE_ANDA_DISINI"; 
-
-function doPost(e) {
-  // Atur Header CORS agar bisa diakses dari GitHub Pages
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
-  };
-
-  // Handle preflight request dari browser
-  if (e.postData.type === "OPTIONS") {
-    return ContentService.createTextOutput("").setMimeType(ContentService.MimeType.TEXT).setHeaders(corsHeaders);
-  }
-
-  try {
-    const requestData = JSON.parse(e.postData.contents);
-    const action = requestData.action;
-    
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-    // === AKSI 1: KIRIM OTP ===
-    if (action === "sendOTP") {
-      const email = requestData.email;
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // Buat 6 digit angka
-      const otpSheet = ss.getSheetByName("OTP_Codes");
-      
-      // Hapus data OTP lama untuk email ini jika ada
-      const data = otpSheet.getDataRange().getValues();
-      for (let i = data.length - 1; i > 0; i--) {
-        if (data[i][0] === email) {
-          otpSheet.deleteRow(i + 1);
-        }
-      }
-      
-      // Simpan OTP baru beserta waktu saat ini
-      otpSheet.appendRow([email, otpCode, new Date()]);
-      
-      // Kirim email OTP menggunakan GmailApp
-      MailApp.sendEmail({
-        to: email,
-        subject: "Kode Verifikasi Pendaftaran Website Karyawan",
-        htmlBody: `<h3>Halo,</h3><p>Kode OTP pendaftaran Anda adalah: <b>${otpCode}</b></p><p>Kode ini berlaku selama 5 menit.</p>`
-      });
-      
-      return ContentService.createTextOutput(JSON.stringify({ status: "SUCCESS", message: "OTP terkirim ke email." }))
-        .setMimeType(ContentService.MimeType.JSON)
-        .setHeaders(corsHeaders);
-    }
-
-    // === AKSI 2: PROSES PENDAFTARAN (REGISTER) ===
-    if (action === "register") {
-      const userSheet = ss.getSheetByName("User_Database");
-      const otpSheet = ss.getSheetByName("OTP_Codes");
-      
-      // Cek validasi OTP terlebih dahulu
-      const otpData = otpSheet.getDataRange().getValues();
-      let isOtpValid = false;
-      let otpRowIndex = -1;
-      
-      for (let i = 1; i < otpData.length; i++) {
-        if (otpData[i][0] === requestData.email && otpData[i][1] === requestData.otp) {
-          // Opsional: Cek jika expired (misal > 5 menit) bisa ditambahkan di sini
-          isOtpValid = true;
-          otpRowIndex = i + 1;
-          break;
-        }
-      }
-      
-      if (!isOtpValid) {
-        return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: "Kode OTP salah atau kedaluwarsa!" }))
-          .setMimeType(ContentService.MimeType.JSON)
-          .setHeaders(corsHeaders);
-      }
-
-      // Cek apakah username atau no_karyawan sudah terdaftar
-      const userData = userSheet.getDataRange().getValues();
-      for (let i = 1; i < userData.length; i++) {
-        if (userData[i][1] === requestData.no_karyawan) {
-          return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: "Nomor Karyawan sudah terdaftar!" })).setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
-        }
-        if (userData[i][5] === requestData.username) {
-          return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: "Username sudah digunakan!" })).setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
-        }
-      }
-
-      // Proses upload foto profil berbentuk Base64 ke Google Drive
-      let fotoDriveId = "";
-      if (requestData.fotoBase64) {
-        const folder = DriveApp.getFolderById(FOLDER_FOTO_ID);
-        const contentData = requestData.fotoBase64.split(",")[1];
-        const blob = Utilities.newBlob(Utilities.base64Decode(contentData), "image/jpeg", `foto_${requestData.username}.jpg`);
-        const file = folder.createFile(blob);
-        fotoDriveId = file.getId();
-      }
-
-      // Hitung nomor urut auto-increment
-      const lastRow = userSheet.getLastRow();
-      const noUrut = lastRow === 1 ? 1 : Number(userSheet.getRange(lastRow, 1).getValue()) + 1;
-
-      // Masukkan data baru ke tabel User_Database
-      userSheet.appendRow([
-        noUrut,
-        requestData.no_karyawan,
-        requestData.nama,
-        requestData.no_telepon,
-        requestData.email,
-        requestData.username,
-        requestData.password_hash, // Password yang sudah di-hash SHA256 dari Frontend
-        requestData.face_descriptor || "", // Data koordinat wajah (kosongkan jika belum implementasi library wajah)
-        fotoDriveId,
-        false, // status_approved awal mula FALSE
-        false, // status_blocked awal mula FALSE
-        5      // Default level pendaftar baru adalah level paling bawah (Level 5)
-      ]);
-
-      // Hapus OTP yang sudah sukses digunakan agar bersih
-      otpSheet.deleteRow(otpRowIndex);
-
-      return ContentService.createTextOutput(JSON.stringify({ status: "SUCCESS", message: "Pendaftaran berhasil! Menunggu approval Admin Master." }))
-        .setMimeType(ContentService.MimeType.JSON)
-        .setHeaders(corsHeaders);
-    }
-
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(corsHeaders);
-  }
-}
-Use code with caution.Ganti teks "MASUKKAN_ID_FOLDER_DRIVE_ANDA_DISINI" di baris paling atas dengan ID Folder Drive yang sudah Anda catat tadi.Klik tombol Simpan (ikon Disket).Gelar Aplikasi Web (Deploy):Klik tombol Terapkan (Deploy) di pojok kanan atas > Pilih Terapkan baru (New deployment).Pilih jenis ekstensi dengan klik ikon Gerigi > Aplikasi web (Web app).Isi deskripsi secara bebas (misal: v1).Ubah bagian Yang memiliki akses (Who has access) menjadi Siapa saja (Anyone). Ini krusial agar GitHub frontend bisa mengirim data.Klik Terapkan (Deploy).Berikan izin akses (Authorize Access) jika diminta oleh akun Google Anda.Jika sudah selesai, Anda akan mendapatkan URL Aplikasi Web. Salin dan simpan URL tersebut. Formatnya mirip seperti: https://google.com.Langkah 3: Buat Frontend di GitHub PagesKita akan membuat satu halaman web sederhana khusus pendaftaran yang responsif menggunakan kamera, yang bisa melakukan enkripsi SHA-256 pada password sebelum dikirim.Buka akun GitHub Anda.Buat sebuah repositori (Repository) baru. Beri nama bebas, misal: app-karyawan. Setel menjadi Public.Di dalam repositori tersebut, buat file baru bernama index.html (Halaman ini akan menjadi struktur dasar form pendaftaran). Isi file tersebut dengan kode di bawah ini:html<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pendaftaran Akun Karyawan</title>
-    <!-- Memakai Tailwind CSS via CDN agar tampilan langsung rapi dan responsif mobile -->
-    <script src="https://jsdelivr.net"></script>
-    <style>
-        /* Desain lingkaran bingkai kamera foto profil */
-        #canvasBox {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 4px solid #3b82f6;
-            position: relative;
-        }
-        video {
-            object-fit: cover;
-            width: 100%;
-            height: 100%;
-        }
-    </style>
-</head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-
-    <div class="bg-white p-6 rounded-2xl shadow-md w-full max-w-md">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Form Pendaftaran</h2>
-        
-        <form id="registerForm" class="space-y-4">
-            
-            <!-- Elemen Ambil Foto Kamera dalam Lingkaran Atas -->
-            <div class="flex flex-col items-center mb-4">
-                <div id="canvasBox" class="bg-gray-200 flex items-center justify-center">
-                    <video id="webcam" autoplay playsinline class="hidden"></video>
-                    <img id="photoPreview" class="hidden w-full h-full object-cover rounded-full" alt="Preview">
-                    <span id="placeholderText" class="text-xs text-gray-500 text-center px-2">Foto belum diambil</span>
-                </div>
-                <button type="button" id="btnKamera" class="mt-2 text-xs bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 transition">Buka Kamera</button>
-                <button type="button" id="btnAmbilFoto" class="mt-2 text-xs bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 transition hidden">Ambil Foto</button>
-            </div>
-
-            <!-- Input Isian Teks -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">No. Karyawan</label>
-                <input type="text" id="no_karyawan" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-                <input type="text" id="nama" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">No. Telepon / WA</label>
-                <input type="tel" id="no_telepon" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-            </div>
-
-            <!-- Bagian Verifikasi Email + OTP -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Email Gmail</label>
-                <div class="flex gap-2 mt-1">
-                    <input type="email" id="email" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-                    <button type="button" id="btnKirimOTP" class="bg-blue-600 text-white text-xs px-3 rounded-lg hover:bg-blue-700 transition">Kirim OTP</button>
-                </div>
-            </div>
-            <div id="otpBox" class="hidden">
-                <label class="block text-sm font-medium text-gray-500">Masukkan 6 Digit OTP</label>
-                <input type="text" id="otp_code" maxlength="6" class="mt-1 w-full p-2 border border-blue-400 rounded-lg bg-blue-55 outline-none tracking-widest text-center font-bold text-lg">
-            </div>
-
-            <!-- Input Kredensial -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Username</label>
-                <input type="text" id="username" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" id="password" required class="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
-            </div>
-
-            <button type="submit" id="btnDaftar" class="w-full bg-gray-400 text-white p-3 rounded-lg font-semibold transition mt-4" disabled>Daftar Akun</button>
-        </form>
-    </div>
-
-    <script>
-        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-        const APPS_SCRIPT_URL = "PASANG_URL_APPS_SCRIPT_DI_SINI";
-
-        const video = document.getElementById('webcam');
-        const photoPreview = document.getElementById('photoPreview');
-        const placeholderText = document.getElementById('placeholderText');
-        const btnKamera = document.getElementById('btnKamera');
-        const btnAmbilFoto = document.getElementById('btnAmbilFoto');
-        let fotoBase64 = "";
-
-        // Fungsi enkripsi SHA-256 bawaan JavaScript browser (SubtleCrypto)
-        async function sha256(string) {
-            const utf8 = new TextEncoder().encode(string);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        // Kontrol Kamera Profil
-        btnKamera.addEventListener('click', async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
-                video.srcObject = stream;
-                video.classList.remove('hidden');
-                placeholderText.classList.add('hidden');
-                photoPreview.classList.add('hidden');
-                btnKamera.classList.add('hidden');
-                btnAmbilFoto.classList.remove('hidden');
-            } catch (err) {
-                alert("Gagal mengakses kamera: " + err.message);
-            }
-        });
-
-        btnAmbilFoto.addEventListener('click', () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            fotoBase64 = canvas.toDataURL('image/jpeg');
-            photoPreview.src = fotoBase64;
-            
-            // Hentikan aliran kamera
-            const stream = video.srcObject;
-            const tracks = stream.getTracks();
-            tracks.forEach(track => track.stop());
-
-            video.classList.add('hidden');
-            photoPreview.classList.remove('hidden');
-            btnAmbilFoto.classList.add('hidden');
-            btnKamera.classList.remove('hidden');
-            btnKamera.innerText = "Ulang Foto";
-        });
-
-        // Aksi Kirim OTP ke Email pendaftar
-        document.getElementById('btnKirimOTP').addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            if(!email) return alert("Mohon isi alamat email terlebih dahulu!");
-
-            document.getElementById('btnKirimOTP').innerText = "Mengirim...";
-            
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'sendOTP', email: email })
-                });
-                const result = await response.json();
-                
-                if (result.status === "SUCCESS") {
-                    alert(result.message);
-                    document.getElementById('otpBox').classList.remove('hidden');
-                    const btnDaftar = document.getElementById('btnDaftar');
-                    btnDaftar.removeAttribute('disabled');
-                    btnDaftar.className = "w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition mt-4";
-                } else {
-                    alert(result.message);
-                }
-            } catch (error) {
-                alert("Koneksi gagal ke server backend: " + error.message);
-            } finally {
-                document.getElementById('btnKirimOTP').innerText = "Kirim OTP";
-            }
-        });
-
-        // Aksi Submit Pendaftaran Akun Akhir
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if(!fotoBase64) return alert("Anda harus mengambil foto profil terlebih dahulu sebelum mendaftar!");
-
-            const passwordMentah = document.getElementById('password').value;
-            const passwordHashed = await sha256(passwordMentah); // Mengamankan password ke SHA-256
-
-            const payload = {
-                action: 'register',
-                no_karyawan: document.getElementById('no_karyawan').value,
-                nama: document.getElementById('nama').value,
-                no_telepon: document.getElementById('no_telepon').value,
-                email: document.getElementById('email').value,
-                otp: document.getElementById('otp_code').value,
-                username: document.getElementById('username').value,
-                password_hash: passwordHashed,
-                fotoBase64: fotoBase64
-            };
-
-            document.getElementById('btnDaftar').innerText = "Memproses Pendaftaran...";
-            document.getElementById('btnDaftar').setAttribute('disabled', true);
-
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-
-                if (result.status === "SUCCESS") {
-                alert(result.message);
-                  document.getElementById('registerForm').reset();
-                  photoPreview.classList.add('hidden');
-                  placeholderText.classList.remove('hidden');
-                  document.getElementById('otpBox').classList.add('hidden');} 
-                else {alert(result.message);}} 
-            catch (error) {
-              alert("Terjadi masalah pendaftaran: " + error.message);} 
-            finally {document.getElementById('btnDaftar').innerText = "Daftar Akun";
-                     document.getElementById('btnDaftar').removeAttribute('disabled');}});
+    </script>
+</body>
+</html>
