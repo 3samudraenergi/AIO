@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Aplikasi Karyawan</title>
+    <!-- Tailwind CSS untuk penataan responsif komputer & mobile HP -->
+    <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <!-- Contoh Tema "Vapor" yang bergaya Neon/Cyberpunk -->
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.10/tailwindcss.min.js"></script>
+    <!-- 
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    -->
+    <style>
+        /* Transisi animasi meluncur halus untuk sidebar menu HP */
+        #sidebarMenu {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 overflow-x-hidden">
+
+    <!-- LAYER OVERLAY TRANSPARAN (Hanya muncul di HP saat menu terbuka) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden" style="display: none;"></div>
+
+    <div class="flex min-h-screen relative">
+
+        <!-- =================================================== -->
+        <!-- AREA NAVIGASI SISI KIRI (SIDEBAR MENU)              -->
+        <!-- =================================================== -->
+        <aside id="sidebarMenu" class="fixed top-0 bottom-0 left-0 w-64 bg-[#0a192f] text-white flex flex-col justify-between p-5 z-50 transform -translate-x-full md:translate-x-0 shadow-2xl md:shadow-none">
+            
+            <!-- BAGIAN ATAS: IDENTITAS PROFIL USER LINGKARAN (Poin 9) -->
+            <div class="flex flex-col items-center border-b border-gray-700 pb-5">
+                <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-600 mb-2 flex items-center justify-center">
+                    <img id="userAvatar" src="" class="w-full h-full object-cover hidden" alt="Profil">
+                    <!-- Placeholder inisial huruf jika foto id kosong -->
+                    <span id="userInitial" class="text-2xl font-bold text-white">?</span>
+                </div>
+                <h4 id="userProfileName" class="text-sm font-semibold tracking-wide text-gray-200">Loading...</h4>
+                <p id="userProfileLevel" class="text-xs text-blue-400 mt-0.5">Level ...</p>
+            </div>
+
+            <!-- BAGIAN TENGAH: TEMPAT RENDERING MENU DINAMIS (Poin 4) -->
+            <nav id="menuContainer" class="flex-1 py-6 space-y-1 overflow-y-auto">
+                <p class="text-xs text-gray-500 text-center">Memuat menu...</p>
+            </nav>
+
+            <!-- BAGIAN PALING BAWAH: TOMBOL LOGOUT UTAMA (Poin 9) -->
+            <div class="border-t border-gray-700 pt-4">
+                <button id="btnLogout" class="w-full flex items-center justify-center gap-2 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white p-2.5 rounded-xl text-sm font-semibold transition duration-200">
+                    <span>🚪</span> Keluar Sistem (Logout)
+                </button>
+            </div>
+        </aside>
+
+        <!-- =================================================== -->
+        <!-- AREA KONTEN UTAMA (SISI KANAN)                      -->
+        <!-- =================================================== -->
+        <main class="flex-1 min-h-screen md:ml-64 flex flex-col">
+            
+            <!-- TOP BAR (Tampilan Header Atas) -->
+            <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 sticky top-0 z-30">
+                <!-- Tombol Hamburger (Alternatif klik di HP jika tidak menggunakan swipe) -->
+                <button id="btnHamburger" class="text-gray-600 md:hidden p-2 hover:bg-gray-100 rounded-lg text-xl outline-none">
+                    ☰
+                </button>
+                <h2 id="pageTitle" class="text-base font-bold text-gray-800">Dashboard Utama</h2>
+                <div class="text-xs text-gray-400 font-medium" id="liveClock">Loading Waktu...</div>
+            </header>
+            <!-- CONTAINER VIEWPORT AREA (Tempat Munculnya Halaman Menu) -->
+            <div id="mainViewport" class="flex-1 p-4 md:p-6 bg-gray-50">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Selamat Datang di Sistem Dashboard</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Gunakan menu di sisi kiri untuk menavigasi ke halaman kerja Anda. Jika Anda mengakses lewat handphone, 
+                        Anda dapat melakukan <b>swipe kanan</b> dari ujung layar untuk membuka menu, atau gunakan tombol hamburger di pojok kiri atas.
+                    </p>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- =================================================== -->
+    <!-- LOGIKA JAVASCRIPT UTAMA INTEGRASI SIDEBAR & SESI     -->
+    <!-- =================================================== -->
+    <script>
+        // PASTIKAN URL DI BAWAH INI ADALAH URL DEPLOYMENT APPS SCRIPT TERBARU ANDA
+        const APPS_SCRIPT_URL = "https://google.com";
+
+        // --- LAPIS PROTEKSI AWAL: KICK OUT TANPA SESI (SISI CLIENT) ---
+        if (localStorage.getItem("isLoggedIn") !== "TRUE" || !localStorage.getItem("userSessionData")) {
+            alert("Akses Ilegal! Silakan lakukan login manual terlebih dahulu.");
+            window.location.href = "login-manual.html";
+        }
+
+        // Ambil data profil terenkripsi dari local storage hasil login manual
+        const userProfile = JSON.parse(localStorage.getItem("userSessionData"));
+
+        // DOM Elemen Navigasi Komponen
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const btnHamburger = document.getElementById('btnHamburger');
+        const menuContainer = document.getElementById('menuContainer');
+        const mainViewport = document.getElementById('mainViewport');
+        const pageTitle = document.getElementById('pageTitle');
+
+        // --- UNIVERSAL FETCH WRAPPER TERPUSAT (MIDDLEWARES LAYER) ---
+        async function panggilGAS(action, payload = {}) {
+            const paketLengkap = {
+                action: action,
+                payload: payload,
+                userData: {
+                    username: userProfile.username || "Guest",
+                    sessionId: userProfile.sessionId || "NoSession"
+                }
+            };
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(paketLengkap)
+                });
+                
+                if (!response.ok) throw new Error("Gagal kontak server! Status: " + response.status);
+
+                const res = await response.json();
+
+                // Interseptor Global Satpam Lapis 3: Sesi Expired / Login di HP Lain
+                if (res.message === "SESI_EXPIRED") {
+                    alert("Sesi Anda Berakhir! Akun terdeteksi aktif di perangkat/perangkat lain.");
+                    logoutSistem();
+                    return null;
+                }
+
+                return res;
+            } catch (err) {
+                console.error("Gagal kontak server:", err);
+                return { status: "error", message: err.toString() };
+            }
+        }
+        // --- FUNGSIONALITAS MEMUAT DATA IDENTITAS PROFIL (Poin 9) ---
+        function inisialisasiProfilUser() {
+            document.getElementById('userProfileName').innerText = userProfile.nama || "Karyawan";
+            document.getElementById('userProfileLevel').innerText = "Level " + userProfile.level;
+
+            const avatarImg = document.getElementById('userAvatar');
+            const initialSpan = document.getElementById('userInitial');
+
+            // Jika user memiliki foto yang tersimpan di Google Drive, buka gambarnya via URL eksternal
+            if (userProfile.foto_id && userProfile.foto_id !== "DRIVE_ERR" && userProfile.foto_id !== "ERROR_DRIVE_UPLOAD") {
+                avatarImg.src = `https://googleusercontent.com{userProfile.foto_id}`;
+                avatarImg.classList.remove('hidden');
+                initialSpan.classList.add('hidden');
+                
+                // Penanganan jika tautan gambar Google Drive rusak / gagal muat
+                avatarImg.onerror = () => {
+                    avatarImg.classList.add('hidden');
+                    initialSpan.classList.remove('hidden');
+                };
+            } else {
+                // Tampilkan huruf depan nama sebagai lambang pengganti foto profil
+                const inisialHuruf = userProfile.nama ? userProfile.nama.charAt(0).toUpperCase() : "?";
+                initialSpan.innerText = inisialHuruf;
+            }
+        }
+
+        // --- FUNGSIONALITAS MEMUAT MENU DARI DATABASE SPREADSHEET (Poin 4 & 7) ---
+        async function muatDaftarMenuDinamis() {
+            inisialisasiProfilUser();
+            
+            // Tembak aksi getMenu ke server Apps Script dengan payload level user saat ini
+            const res = await panggilGAS("getMenu", { level: userProfile.level });
+            
+            if (res && res.status === "success") {
+                menuContainer.innerHTML = ""; // Bersihkan teks loading
+                
+                res.menuList.forEach(menu => {
+                    // Buat tombol elemen link menu secara dinamis
+                    const btnMenu = document.createElement('button');
+                    btnMenu.className = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition duration-150 border-none outline-none text-left cursor-pointer";
+                    btnMenu.innerHTML = `<span>📂</span> <span>${menu.nama_menu}</span>`;
+                    
+                    // Pasang event listener klik untuk memicu perpindahan konten
+                    btnMenu.addEventListener('click', () => {
+                        bukaHalamanKonten(menu.nama_menu, menu.target_page);
+                        tutupSidebarHP(); // Otomatis tutup menu jika diakses lewat HP
+                    });
+                    
+                    menuContainer.appendChild(btnMenu);
+                });
+            } else {
+                menuContainer.innerHTML = `<p class="text-xs text-red-400 text-center px-2">Gagal memuat menu: ${res? res.message : 'Koneksi Terputus'}</p>`;
+            }
+        }
+
+        // --- FUNGSIONALITAS ROUTER VIEWPORT HALAMAN (Poin 12 - 16) ---
+        function bukaHalamanKonten(namaMenu, targetPage) {
+            pageTitle.innerText = namaMenu;
+            mainViewport.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
+                    <p class="text-sm text-gray-500">Membuka halaman ${namaMenu}...</p>
+                </div>
+            `;
+
+            // Struktur Scalable: Untuk saat ini kita memunculkan mock container.
+            // Di tahap berikutnya, fungsi ini akan melakukan fetch() file HTML dari GitHub views/ folder Anda.
+            setTimeout(() => {
+                mainViewport.innerHTML = `
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Halaman: ${namaMenu}</h3>
+                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            Modul halaman kerja untuk <b>${targetPage}</b> berhasil di-routing secara dinamis berdasarkan otorisasi Level ${userProfile.level}.
+                        </p>
+                        <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 font-medium">
+                            Status Koneksi: Terhubung Aman dengan Sesi Token ${userProfile.sessionId.substring(0,8)}...
+                        </div>
+                    </div>
+                `;
+            }, 400000 / 100000); // Simulasi render transisi 400ms
+        }
+        // --- FUNGSIONALITAS KONTROL SIDEBAR UI DI HP ---
+        function bukaSidebarHP() {
+            sidebarMenu.style.transform = "translateX(0)";
+            sidebarMenu.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.remove('hidden');
+            sidebarOverlay.style.display = "block";
+        }
+
+        function tutupSidebarHP() {
+            sidebarMenu.style.transform = "translateX(-100%)";
+            sidebarMenu.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+            sidebarOverlay.style.display = "none";
+        }
+
+        // Kontrol klik tombol hamburger dan lapisan luar overlay
+        btnHamburger.addEventListener('click', bukaSidebarHP);
+        sidebarOverlay.addEventListener('click', tutupSidebarHP);
+
+        // ===================================================
+        // 📱 SISTEM DETEKSI USAPAN JARI TANGAN (SWIPE GESTURE)
+        // ===================================================
+        let sentuhanAwalX = 0;
+        let sentuhanAwalY = 0;
+
+        // Tangkap koordinat awal saat jari pertama kali menyentuh layar HP
+        window.addEventListener('touchstart', (e) => {
+            sentuhanAwalX = e.touches[0].clientX;
+            sentuhanAwalY = e.touches[0].clientY;
+        }, { passive: true });
+
+        // Tangkap arah pergerakan geseran saat jari diangkat dari layar HP
+        window.addEventListener('touchend', (e) => {
+            const sentuhanAkhirX = e.changedTouches[0].clientX;
+            const sentuhanAkhirY = e.changedTouches[0].clientY;
+
+            const selisihX = sentuhanAkhirX - sentuhanAwalX;
+            const selisihY = sentuhanAkhirY - sentuhanAwalY;
+
+            // Pastikan geseran dominan horizontal (kanan-kiri) bukan vertikal (atas-bawah)
+            if (Math.abs(selisihX) > Math.abs(selisihY)) {
+                // Batas ambang minimal geseran sejauh 60 pixel agar tidak salah deteksi
+                if (Math.abs(selisihX) > 60) {
+                    if (selisihX > 0) {
+                        // 1. SWIPE KANAN: Buka Menu (Hanya jika usapan dimulai dari area ujung kiri layar < 40px)
+                        if (sentuhanAwalX < 40) {
+                            console.log("[SWIPE] Deteksi geser kanan, membuka menu...");
+                            bukaSidebarHP();
+                        }
+                    } else {
+                        // 2. SWIPE KIRI: Tutup Menu (Bisa diusap dari mana saja saat menu terbuka)
+                        if (!sidebarMenu.classList.contains('-translate-x-full')) {
+                            console.log("[SWIPE] Deteksi geser kiri, menutup menu...");
+                            tutupSidebarHP();
+                        }
+                    }
+                }
+            }
+        }, { passive: true });
+
+        // --- FUNGSIONALITAS JAM REAL-TIME DAN LOGOUT ---
+        function jalankanJamDigital() {
+            setInterval(() => {
+                const sekarang = new Date();
+                document.getElementById('liveClock').innerText = sekarang.toLocaleTimeString('id-ID') + " | " + sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            }, 1000);
+        }
+
+        function logoutSistem() {
+            // Bersihkan data profil dan status login dari memori lokal browser
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("userSessionData");
+            alert("Anda telah keluar dari sistem secara aman.");
+            window.location.href = "index.html";
+        }
+
+        document.getElementById('btnLogout').addEventListener('click', logoutSistem);
+
+        // Eksekusi pemuatan data awal dashboard saat dokumen siap
+        window.addEventListener('DOMContentLoaded', () => {
+            jalankanJamDigital();
+            muatDaftarMenuDinamis();
+        });
+    </script>
+</body>
+</html>
