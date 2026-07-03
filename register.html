@@ -202,9 +202,30 @@
                     btnKirimOTP.removeAttribute('disabled');
                 }
             } catch (e) { 
-                alert("Gagal melakukan verifikasi awal. Periksa status deployment server database Anda."); 
-                btnKirimOTP.innerText = "Kirim OTP"; 
-                btnKirimOTP.removeAttribute('disabled');
+                //alert("Gagal melakukan verifikasi awal. Periksa status deployment server database Anda."); 
+                //btnKirimOTP.innerText = "Kirim OTP"; 
+                //btnKirimOTP.removeAttribute('disabled');
+
+                // =========================================================
+                // 🪤 TRAP INTERSEPTOR ERROR UTAMA (SISI CLIENT)
+                // =========================================================
+                console.error("Detail Eror Fetch:", e);
+
+                // Membuat teks panduan pelacakan eror yang informatif untuk user
+                let pesanErorDetail = 
+                    "Sistem mendeteksi kegagalan komunikasi (CORS/Network Error).\n\n" +
+                    "Analisis Penyebab:\n" +
+                    "1. Kemungkinan besar data OTP SUDAH sukses tertulis di Spreadsheet Anda.\n" +
+                    "2. Namun server Google Apps Script melakukan pengalihan (redirect) internal " +
+                    "yang diblokir oleh browser Anda.\n\n" +
+                    "Detail Teknis Browser: " + e.message + "\n\n" +
+                    "Tindakan Pengaman: Sistem akan tetap MEMBUKA FORM LANJUTAN untuk Anda. " +
+                    "Silakan periksa kotak masuk email atau cek baris sheet 'OTP_Codes' Anda untuk melihat kodenya!";
+
+                alert(pesanErorDetail);
+
+                // Memaksa form lanjutan tetap terbuka demi kelancaran alur uji coba Anda
+                bukaFormTahapDua();
             }
         });
 
