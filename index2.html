@@ -36,7 +36,8 @@
             <img id="photoPreview" class="hidden" alt="Preview">
         </div>
         <p id="cameraStatus" class="text-xs text-gray-500 mb-6 text-center">Menyiapkan kamera untuk pengenalan wajah...</p>
-                <!-- =================================================== -->
+        
+        <!-- =================================================== -->
         <!-- TAMPILAN 1: MENU UTAMA AWAL (DEFAULT TAMPIL)        -->
         <!-- =================================================== -->
         <div id="menuAwalBox" class="w-full space-y-3">
@@ -71,6 +72,7 @@
             </form>
             <button id="btnKembaliDariLogin" class="w-full text-xs text-blue-600 hover:underline text-center block mt-2">← Kembali ke Pilihan Utama</button>
         </div>
+        
         <!-- =================================================== -->
         <!-- TAMPILAN 3: FORM PENDAFTARAN (REGISTER)             -->
         <!-- =================================================== -->
@@ -119,8 +121,9 @@
             </form>
             <button id="btnKembaliDariDaftar" class="w-full text-xs text-blue-600 hover:underline text-center block mt-2">← Batal dan Kembali</button>
         </div>
-
     </div>
+
+    
     <!-- =================================================== -->
     <!-- LOGIKA JAVASCRIPT UTAMA                             -->
     <!-- =================================================== -->
@@ -140,7 +143,7 @@
         let fotoBase64 = "";
         let localStream = null;
 
-        // --- SISTEM AKSES KAMERA OTOMATIS ---
+        /* --- SISTEM AKSES KAMERA OTOMATIS --- */
         async function jalankanKamera() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
