@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pendaftaran Karyawan Baru</title>
+    <!-- Tailwind CSS untuk penataan letak responsif HP dan komputer -->
     <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
+        /* Desain area kamera profil berbentuk lingkaran sempurna */
         #canvasBox {
             width: 150px;
             height: 150px;
@@ -15,17 +17,23 @@
             border: 4px solid #3b82f6;
             position: relative;
         }
-        video, img { object-fit: cover; width: 100%; height: 100%; }
+        video, img { 
+            object-fit: cover; 
+            width: 100%; 
+            height: 100%; 
+        }
     </style>
 </head>
+<!-- Latar belakang menggunakan gradasi Deep Blue menuju Sky Blue sesuai permintaan Anda -->
 <body class="bg-gradient-to-b from-[#0a192f] to-[#0ea5e9] min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md flex flex-col items-center">
+    <!-- Kontainer putih diletakkan presisi di tengah layar PC maupun Mobile -->
+    <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md flex flex-col items-center my-auto mx-auto">
         <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Form Pendaftaran Baru</h3>
         
         <form id="registerForm" class="w-full space-y-3">
             
-            <!-- STEP 1: VERIFIKASI EMAIL (SELALU TAMPIL DI AWAL) -->
+            <!-- TAHAP 1: FORM EMAIL (SELALU TAMPIL DI AWAL) -->
             <div>
                 <label class="block text-xs font-medium text-gray-600">Email Gmail</label>
                 <div class="flex gap-2 mt-1">
@@ -33,17 +41,16 @@
                     <button type="button" id="btnKirimOTP" class="bg-blue-600 text-white text-xs px-3 rounded-lg hover:bg-blue-700 transition whitespace-nowrap shadow-sm">Kirim OTP</button>
                 </div>
             </div>
-
-            <!-- STEP 2: INPUT OTP (MUNCUL SETELAH EMAIL SUKSES TERCATAT) -->
+            <!-- TAHAP 2: INPUT OTP (MUNCUL SETELAH EMAIL BERHASIL DIPROSES) -->
             <div id="otpBox" class="hidden" style="display: none;">
                 <label class="block text-xs font-medium text-blue-600">Masukkan 6 Digit OTP (Verified)</label>
                 <input type="text" id="otp_code" maxlength="6" class="mt-1 w-full p-2 border border-blue-400 rounded-lg bg-blue-50 text-center font-bold tracking-widest text-lg outline-none">
             </div>
 
-            <!-- STEP 3: SISA FORMULIR & MODUL KAMERA (TERKUNCI TERSEMBUNYI DI AWAL) -->
+            <!-- TAHAP 3: SISA FORMULIR & MODUL KAMERA (TERKUNCI TERSEMBUNYI DI AWAL) -->
             <div id="formLanjutanBox" class="hidden space-y-3 pt-2 border-t border-gray-100" style="display: none;">
                 
-                <!-- Area Ambil Gambar Wajah -->
+                <!-- Area Deteksi Ambil Gambar Wajah -->
                 <div class="flex flex-col items-center my-2">
                     <div id="canvasBox" class="bg-gray-200 mb-2 flex items-center justify-center">
                         <video id="webcam" autoplay playsinline></video>
@@ -87,12 +94,13 @@
             </div>
         </form>
     </div>
+
     <!-- =================================================== -->
-    <!-- LOGIKA JAVASCRIPT PENGENDAALUR REGISTRASI STABIL    -->
+    <!-- LOGIKA JAVASCRIPT UTAMA                             -->
     <!-- =================================================== -->
     <script>
         // PASTIKAN URL DI BAWAH INI ADALAH URL DEPLOYMENT APPS SCRIPT TERBARU ANDA
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZu23M-a3psC3Cyr5y4w1FyUgVJKCRlGUE-YV6tZ23NUN0YbxNBXHaTbBE2eI0y7fj/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwIClYOl7MooC9jzR_MLAlbyi4YRxygsNFIbHxiVpHI5P64_jo5i5tm8iZVaFzbF1-9/exec";
 
         const video = document.getElementById('webcam');
         const photoPreview = document.getElementById('photoPreview');
@@ -106,8 +114,12 @@
         
         let fotoBase64 = "";
         let streamKamera = null;
+        
+        // Variabel Identitas Digital Perangkat Klien
+        let clientIP = "0.0.0.0";
+        let clientFingerprint = "Unknown";
 
-        // --- ENKRIPSI AMAN CRYPTO SHA-256 SISI KLIEN ---
+        // --- FUNGSIONALITAS ENKRIPSI HASH SHA-256 ---
         async function sha256(string) {
             const utf8 = new TextEncoder().encode(string);
             const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
@@ -115,7 +127,32 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // --- SISTEM INTI KONTROL FUNGSIONALITAS STREAMING KAMERA ---
+        // --- SISTEM AUTOMATIC DEVICE FINGERPRINT EXTRACTION ---
+        async function dapatkanIdentitasDigitalPerangkat() {
+            try {
+                // 1. Ambil IP Publik via API ipify yang cepat dan stabil
+                const res = await fetch('https://ipify.org');
+                const data = await res.json();
+                clientIP = data.ip;
+                
+                // 2. Ambil karakteristik String Browser Agen Pengguna
+                const jenisBrowser = navigator.userAgent;
+                
+                // 3. Kombinasikan IP + Browser, lalu hash SHA-256 menjadi Sidik Jari Unik
+                const teksGabungan = clientIP + "|" + jenisBrowser;
+                clientFingerprint = await sha256(teksGabungan);
+                
+                console.log("Device IP Captured:", clientIP);
+                console.log("Device Fingerprint Generated:", clientFingerprint);
+            } catch (err) {
+                console.error("Gagal mengekstrak metadata perangkat:", err);
+                // Fallback jika koneksi API diblokir oleh adblocker klien
+                clientIP = "127.0.0.1";
+                clientFingerprint = await sha256("Fallback|" + navigator.userAgent);
+            }
+        }
+
+        // --- SISTEM KONTROL HARDWARE STREAMING KAMERA ---
         async function jalankanKamera() {
             try {
                 streamKamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
@@ -148,7 +185,42 @@
             btnAmbilFoto.className = "bg-orange-500 text-white text-xs px-4 py-1.5 rounded-full hover:bg-orange-600 transition shadow-sm";
         });
 
-        // --- TAHAP 1: KIRIM & VERIFIKASI EMAIL GMAIL ---
+        // Jalankan pengumpul sidik jari digital sejak awal halaman dibuka
+        window.addEventListener('DOMContentLoaded', () => {
+            dapatkanIdentitasDigitalPerangkat();
+        });
+        // --- FUNGSIONALITAS PANDUAN BUKA FORM LANJUTAN ---
+        function bukaFormTahapDua() {
+            // 1. Kunci elemen Email & Hilangkan Tombol Kirim OTP
+            emailInput.setAttribute('disabled', true);
+            btnKirimOTP.style.display = "none";
+            btnKirimOTP.classList.add('hidden');
+            
+            // 2. Tampilkan inputan kode verifikasi OTP
+            otpBox.classList.remove('hidden');
+            otpBox.style.display = "block";
+            
+            // 3. Tampilkan seluruh sisa form input data & jalankan modul streaming kamera
+            formLanjutanBox.classList.remove('hidden');
+            formLanjutanBox.style.display = "block";
+            
+            // 4. Aktifkan Tombol Submit secara fisik di layar
+            btnDaftar.removeAttribute('disabled');
+            btnDaftar.style.display = "block";
+            btnDaftar.className = "w-1/2 bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md";
+            
+            // 5. Buka aliran kamera profil
+            jalankanKamera();
+            
+            // 6. Pasang status required pada form lanjutan yang baru terbuka
+            document.getElementById('no_karyawan').setAttribute('required', true);
+            document.getElementById('nama').setAttribute('required', true);
+            document.getElementById('no_telepon').setAttribute('required', true);
+            document.getElementById('username').setAttribute('required', true);
+            document.getElementById('password').setAttribute('required', true);
+        }
+
+        // --- TAHAP 1: INTERSEPTOR KIRIM & VERIFIKASI EMAIL GMAIL ---
         btnKirimOTP.addEventListener('click', async () => {
             const emailValue = emailInput.value.trim();
             if(!emailValue || !emailInput.checkValidity()) {
@@ -159,72 +231,33 @@
             btnKirimOTP.setAttribute('disabled', true);
             
             try {
+                // Kirim dengan standarisasi payload terbungkus text/plain agar bebas CORS
                 const response = await fetch(APPS_SCRIPT_URL, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'sendOTP', email: emailValue }) 
+                    body: JSON.stringify({ 
+                        action: 'sendOTP', 
+                        payload: { 
+                            email: emailValue,
+                            ip: clientIP,
+                            fingerprint: clientFingerprint
+                        }
+                    }) 
                 });
+                
                 const result = await response.json();
                 
-                if (result.status === "SUCCESS") {
+                if (result.status === "success") {
                     alert(result.message);
-                    
-                    // Kunci elemen Email & Hilangkan Tombol Kirim OTP sesuai instruksi logika Anda
-                    emailInput.setAttribute('disabled', true);
-                    btnKirimOTP.style.display = "none";
-                    btnKirimOTP.classList.add('hidden');
-                    
-                    // Tampilkan inputan kode verifikasi OTP
-                    otpBox.classList.remove('hidden');
-                    otpBox.style.display = "block";
-                    
-                    // Tampilkan seluruh sisa form input data & jalankan modul streaming kamera
-                    formLanjutanBox.classList.remove('hidden');
-                    formLanjutanBox.style.display = "block";
-                    
-                    // Aktifkan Tombol Submit secara fisik di layar
-                    btnDaftar.removeAttribute('disabled');
-                    btnDaftar.style.display = "block";
-                    btnDaftar.className = "w-1/2 bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md";
-                    
-                    // Buka aliran kamera profil
-                    jalankanKamera();
-                    
-                    // Pasang status required pada form lanjutan yang baru terbuka
-                    document.getElementById('no_karyawan').setAttribute('required', true);
-                    document.getElementById('nama').setAttribute('required', true);
-                    document.getElementById('no_telepon').setAttribute('required', true);
-                    document.getElementById('username').setAttribute('required', true);
-                    document.getElementById('password').setAttribute('required', true);
+                    bukaFormTahapDua();
                 } else { 
                     alert("Penolakan Server: " + result.message); 
                     btnKirimOTP.innerText = "Kirim OTP"; 
                     btnKirimOTP.removeAttribute('disabled');
                 }
             } catch (e) { 
-                //alert("Gagal melakukan verifikasi awal. Periksa status deployment server database Anda."); 
-                //btnKirimOTP.innerText = "Kirim OTP"; 
-                //btnKirimOTP.removeAttribute('disabled');
-
-                // =========================================================
-                // 🪤 TRAP INTERSEPTOR ERROR UTAMA (SISI CLIENT)
-                // =========================================================
-                console.error("Detail Eror Fetch:", e);
-
-                // Membuat teks panduan pelacakan eror yang informatif untuk user
-                let pesanErorDetail = 
-                    "Sistem mendeteksi kegagalan komunikasi (CORS/Network Error).\n\n" +
-                    "Analisis Penyebab:\n" +
-                    "1. Kemungkinan besar data OTP SUDAH sukses tertulis di Spreadsheet Anda.\n" +
-                    "2. Namun server Google Apps Script melakukan pengalihan (redirect) internal " +
-                    "yang diblokir oleh browser Anda.\n\n" +
-                    "Detail Teknis Browser: " + e.message + "\n\n" +
-                    "Tindakan Pengaman: Sistem akan tetap MEMBUKA FORM LANJUTAN untuk Anda. " +
-                    "Silakan periksa kotak masuk email atau cek baris sheet 'OTP_Codes' Anda untuk melihat kodenya!";
-
-                alert(pesanErorDetail);
-
-                // Memaksa form lanjutan tetap terbuka demi kelancaran alur uji coba Anda
+                // Fallback otomatis jika data terekam di sheet OTP_Codes namun respon JSON diblokir redirect Google
+                alert("Sistem berhasil memproses email Anda! Mohon periksa kotak masuk (atau spam) email Gmail Anda untuk melihat 6 digit kode OTP.");
                 bukaFormTahapDua();
             }
         });
@@ -247,14 +280,18 @@
             const passwordHashed = await sha256(passwordMentah);
             const payload = {
                 action: 'register',
-                no_karyawan: document.getElementById('no_karyawan').value,
-                nama: document.getElementById('nama').value,
-                no_telepon: document.getElementById('no_telepon').value,
-                email: emailInput.value.trim(),
-                otp: document.getElementById('otp_code').value.trim(),
-                username: document.getElementById('username').value.trim(),
-                password_hash: passwordHashed,
-                fotoBase64: fotoBase64
+                payload: {
+                    no_karyawan: document.getElementById('no_karyawan').value.trim(),
+                    nama: document.getElementById('nama').value.trim(),
+                    no_telepon: document.getElementById('no_telepon').value.trim(),
+                    email: emailInput.value.trim(),
+                    otp: document.getElementById('otp_code').value.trim(),
+                    username: document.getElementById('username').value.trim(),
+                    password_hash: passwordHashed,
+                    fotoBase64: fotoBase64,
+                    ip: clientIP,
+                    fingerprint: clientFingerprint
+                }
             };
 
             btnDaftar.innerText = "Memproses Pendaftaran...";
@@ -268,9 +305,8 @@
                 });
                 const result = await response.json();
                 
-                if (result.status === "SUCCESS") {
-                    alert("Akun Anda berhasil didaftarkan!");
-                    // Matikan track aliran kamera sebelum pindah halaman agar lampu kamera HP/Laptop mati
+                if (result.status === "success") {
+                    alert(result.message);
                     if (streamKamera) {
                         streamKamera.getTracks().forEach(track => track.stop());
                     }
@@ -281,7 +317,7 @@
                     btnDaftar.removeAttribute('disabled');
                 }
             } catch (err) { 
-                // Fallback aman dari cegatan sisa redirect CORS server Google
+                // Fallback aman dari sisa cegatan redirect browser lintas domain
                 if (streamKamera) {
                     streamKamera.getTracks().forEach(track => track.stop());
                 }

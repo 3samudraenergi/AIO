@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Manual Karyawan</title>
     <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-b from-[#0a192f] to-[#0ea5e9] min-h-screen flex items-center justify-center p-4">
 
@@ -32,8 +32,13 @@
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZu23M-a3psC3Cyr5y4w1FyUgVJKCRlGUE-YV6tZ23NUN0YbxNBXHaTbBE2eI0y7fj/exec";
+        // PASTIKAN URL DI BAWAH INI ADALAH URL DEPLOYMENT APPS SCRIPT TERBARU ANDA
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwIClYOl7MooC9jzR_MLAlbyi4YRxygsNFIbHxiVpHI5P64_jo5i5tm8iZVaFzbF1-9/exec";
 
+        let clientIP = "0.0.0.0";
+        let clientFingerprint = "Unknown";
+
+        // --- HASH SHA-256 SISI KLIEN ---
         async function sha256(string) {
             const utf8 = new TextEncoder().encode(string);
             const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
@@ -41,43 +46,68 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        // --- SISTEM EKSTRAKSI SIdik JARI PERANGKAT ---
+        async function dapatkanIdentitasDigital() {
+            try {
+                const res = await fetch('https://ipify.org');
+                const data = await res.json();
+                clientIP = data.ip;
+                
+                const teksGabungan = clientIP + "|" + navigator.userAgent;
+                clientFingerprint = await sha256(teksGabungan);
+            } catch (err) {
+                clientIP = "127.0.0.1";
+                clientFingerprint = await sha256("Fallback|" + navigator.userAgent);
+            }
+        }
+
+        // Ambil data sidik jari perangkat saat halaman login dimuat
+        window.addEventListener('DOMContentLoaded', dapatkanIdentitasDigital);
+
+        // --- PROSES SUBMIT LOGIN FORM ---
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btnLogin = document.getElementById('btnLogin');
             btnLogin.innerText = "Memverifikasi...";
             btnLogin.setAttribute('disabled', true);
 
-            const userText = document.getElementById('login_user').value;
+            const userText = document.getElementById('login_user').value.trim();
             const passText = document.getElementById('login_pass').value;
             const passHash = await sha256(passText);
+
+            const paketKiriman = {
+                action: 'checkLogin',
+                payload: {
+                    username_or_email: userText,
+                    password_hash: passHash,
+                    ip: clientIP,
+                    fingerprint: clientFingerprint
+                }
+            };
 
             try {
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'login',
-                        username_or_email: userText,
-                        password_hash: passHash
-                    })
+                    body: JSON.stringify(paketKiriman)
                 });
                 const result = await response.json();
 
-                if (result.status === "SUCCESS") {
-                    // Simpan data login sementara ke dalam session storage browser
-                    sessionStorage.setItem("isLoggedIn", "TRUE");
-                    sessionStorage.setItem("userProfile", JSON.stringify(result.userData));
-                    
+                if (result.status === "success") {
                     alert("Login Berhasil! Selamat Datang " + result.userData.nama);
-                    // Pindah arah langsung ke halaman dashboard utama (Akan kita buat di tahap selanjutnya)
+                    
+                    // 💾 Amankan Data Sesi ke dalam Local Storage Browser Klien untuk Lapis Satpam 3 Dashboard
+                    localStorage.setItem("isLoggedIn", "TRUE");
+                    localStorage.setItem("userSessionData", JSON.stringify(result.userData));
+                    
+                    // Alihkan ke halaman dashboard utama yang akan kita buat selanjutnya
                     window.location.href = "dashboard.html";
-                } else if (result.status === "PENDING") {
-                    window.location.href = "pending.html";
                 } else {
-                    alert(result.message);
+                    // Tampilkan pesan kesalahan mendetail (Pending, Blocked, atau Salah Password)
+                    alert("Gagal Masuk:\n" + result.detail);
                 }
             } catch (error) {
-                alert("Gangguan sistem masuk jaringan.");
+                alert("Gangguan sistem masuk, periksa jaringan internet Anda.");
             } finally {
                 btnLogin.innerText = "Masuk";
                 btnLogin.removeAttribute('disabled');
