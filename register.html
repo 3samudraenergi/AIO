@@ -1,18 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pendaftaran Karyawan Baru</title>
-    <!-- Tailwind CSS untuk penataan letak responsif HP dan komputer -->
+    <title>Pendaftaran Karyawan Baru - Versi 1.1</title>
     <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.10/tailwindcss.min.js"></script>
-    <!-- 
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    -->
     <style>
-        /* Desain area kamera profil berbentuk lingkaran sempurna */
         #canvasBox {
             width: 150px;
             height: 150px;
@@ -28,272 +22,228 @@
         }
     </style>
 </head>
-<!-- Latar belakang menggunakan gradasi Deep Blue menuju Sky Blue sesuai permintaan Anda -->
 <body class="bg-gradient-to-b from-[#0a192f] to-[#0ea5e9] min-h-screen flex items-center justify-center p-4">
 
-    <!-- Kontainer putih diletakkan presisi di tengah layar PC maupun Mobile -->
-    <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md flex flex-col items-center my-auto mx-auto">
-        <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Form Pendaftaran Baru</h3>
+    <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md my-8">
+        <h3 class="text-xl font-bold text-gray-800 text-center mb-2">Formulir Karyawan Baru</h3>
+        <p class="text-xs text-gray-500 text-center mb-6">[SYSTEM VERSION 1.1 - SECURE BIOMETRIC]</p>
         
-        <form id="registerForm" class="w-full space-y-3">
+        <div class="mb-6 text-center">
+            <div id="canvasBox" class="mx-auto">
+                <video id="webcam" autoplay muted playsinline></video>
+            </div>
+            <p id="cameraStatus" class="text-xs text-gray-500 mt-2">Menghubungkan ke hardware webcam...</p>
             
-            <!-- TAHAP 1: FORM EMAIL (SELALU TAMPIL DI AWAL) -->
+            <div class="mt-3 p-3 bg-gray-900/90 rounded-xl border border-blue-500/30 text-center max-w-xs mx-auto">
+                <p id="livenessInstruction" class="text-xs font-bold text-cyan-400 animate-pulse uppercase tracking-wider">
+                    Menunggu Model AI Siap...
+                </p>
+                <div class="w-full bg-gray-700 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <div id="livenessProgress" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+        </div>
+
+        <form id="formRegistrasi" class="space-y-4">
             <div>
-                <label class="block text-xs font-medium text-gray-600">Email Gmail</label>
+                <label class="block text-xs font-medium text-gray-600">Alamat Email Perusahaan (Gmail)</label>
                 <div class="flex gap-2 mt-1">
-                    <input type="email" id="email" required class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100 disabled:text-gray-500">
-                    <button type="button" id="btnKirimOTP" class="bg-blue-600 text-white text-xs px-3 rounded-lg hover:bg-blue-700 transition whitespace-nowrap shadow-sm">Kirim OTP</button>
-                </div>
-            </div>
-            <!-- TAHAP 2: INPUT OTP (MUNCUL SETELAH EMAIL BERHASIL DIPROSES) -->
-            <div id="otpBox" class="hidden" style="display: none;">
-                <label class="block text-xs font-medium text-blue-600">Masukkan 6 Digit OTP (Verified)</label>
-                <input type="text" id="otp_code" maxlength="6" class="mt-1 w-full p-2 border border-blue-400 rounded-lg bg-blue-50 text-center font-bold tracking-widest text-lg outline-none">
-            </div>
-
-            <!-- TAHAP 3: SISA FORMULIR & MODUL KAMERA (TERKUNCI TERSEMBUNYI DI AWAL) -->
-            <div id="formLanjutanBox" class="hidden space-y-3 pt-2 border-t border-gray-100" style="display: none;">
-                
-                <!-- Area Deteksi Ambil Gambar Wajah -->
-                <div class="flex flex-col items-center my-2">
-                    <div id="canvasBox" class="bg-gray-200 mb-2 flex items-center justify-center">
-                        <video id="webcam" autoplay playsinline></video>
-                        <img id="photoPreview" class="hidden" alt="Preview">
-                    </div>
-                    <button type="button" id="btnAmbilFoto" class="bg-green-600 text-white text-xs px-4 py-1.5 rounded-full hover:bg-green-700 transition shadow-sm">
-                        Kunci Foto Profil Anda
-                    </button>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-600">No. Karyawan</label>
-                    <input type="text" id="no_karyawan" class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600">Nama Lengkap</label>
-                    <input type="text" id="nama" class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600">No. Telepon / WA</label>
-                    <input type="tel" id="no_telepon" class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600">Username</label>
-                    <input type="text" id="username" class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600">Password (Minimal 6 Karakter)</label>
-                    <input type="password" id="password" class="mt-1 w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
+                    <input type="email" id="reg_email" required class="w-2/3 p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                    <button type="button" id="btnKirimOTP" class="w-1/3 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition">Kirim OTP</button>
                 </div>
             </div>
 
-            <!-- TOMBOL AKSI UTAMA -->
-            <div class="flex gap-2 pt-2">
-                <a href="index.html" id="btnCancel" class="w-1/2 bg-gray-200 text-gray-700 p-3 rounded-lg font-semibold hover:bg-gray-300 transition text-center shadow-sm">
-                    Cancel
-                </a>
-                <button type="submit" id="btnDaftar" class="w-1/2 bg-gray-400 text-white p-3 rounded-lg font-semibold transition shadow-sm" disabled style="display: none;">
-                    Submit
-                </button>
+            <div>
+                <label class="block text-xs font-medium text-gray-600">Kode Verifikasi OTP</label>
+                <div class="flex gap-2 mt-1">
+                    <input type="text" id="reg_otp" required placeholder="6 Digit" class="w-2/3 p-2.5 border border-gray-200 rounded-lg text-sm text-center tracking-widest focus:outline-none focus:border-blue-500">
+                    <button type="button" id="btnVerifikasiOTP" class="w-1/3 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition">Verifikasi</button>
+                </div>
             </div>
+
+            <hr class="border-gray-100 my-2">
+
+            <div>
+                <label class="block text-xs font-medium text-gray-600">ID Username Unik</label>
+                <input type="text" id="reg_user" required class="mt-1 w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-600">Nama Lengkap Sesuai KTP</label>
+                <input type="text" id="reg_nama" required class="mt-1 w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-600">Kata Sandi Akun</label>
+                <input type="password" id="reg_pass" required class="mt-1 w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+            </div>
+
+            <button type="submit" id="btnSubmitForm" disabled class="w-full bg-gray-500 text-white p-3 rounded-xl text-sm font-medium transition cursor-not-allowed shadow-md">
+                Submit Pendaftaran
+            </button>
         </form>
     </div>
 
-    <!-- =================================================== -->
-    <!-- LOGIKA JAVASCRIPT UTAMA                             -->
-    <!-- =================================================== -->
     <script>
-        // PASTIKAN URL DI BAWAH INI ADALAH URL DEPLOYMENT APPS SCRIPT TERBARU ANDA
-        const APPS_SCRIPT_URL = 
-        "https://script.google.com/macros/s/AKfycbyEItHQ_Bv-S9iohKgWVy2ZIJJ9jyRfHweogi4aQm1oEh5uFhbeIN_nMmnpPtUegcFB/exec";
+        console.log("[VERSION CONTROL] Memuat register.html - Versi 1.1 (Liveness Terintegrasi)");
 
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/"+
+        "AKfycbxc3ZUJ1sjzgTsiCvb-Bo4-ZK58J_DCoocy5sl-C4plM-iPPTO9UbswKKGmTdAgA9kt" + "/exec";
+               
         const video = document.getElementById('webcam');
-        const photoPreview = document.getElementById('photoPreview');
-        const btnAmbilFoto = document.getElementById('btnAmbilFoto');
-        const btnKirimOTP = document.getElementById('btnKirimOTP');
-        const btnDaftar = document.getElementById('btnDaftar');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const btnDaftar = document.getElementById('btnSubmitForm');
         
-        const emailInput = document.getElementById('email');
-        const otpBox = document.getElementById('otpBox');
-        const formLanjutanBox = document.getElementById('formLanjutanBox');
-        
-        let fotoBase64 = "";
         let streamKamera = null;
-        
-        // Variabel Identitas Digital Perangkat Klien
-        let clientIP = "0.0.0.0";
-        let clientFingerprint = "Unknown";
+        let stepLiveness = 0; 
+        let dataFotoWajah = { depan: "", kiri: "", kanan: "" };
+        let eyeRatioBase = 0;
+        let clientIP = "127.0.0.1";
+        let clientFingerprint = "Local-Dev-Env";
 
-        // --- FUNGSIONALITAS ENKRIPSI HASH SHA-256 ---
-        async function sha256(string) {
-            const utf8 = new TextEncoder().encode(string);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        // --- SISTEM AUTOMATIC DEVICE FINGERPRINT EXTRACTION ---
-        async function dapatkanIdentitasDigitalPerangkat() {
-            try {
-                // 1. Ambil IP Publik via API ipify yang cepat dan stabil
-                const res = await fetch('https://ipify.org');
-                const data = await res.json();
-                clientIP = data.ip;
-                
-                // 2. Ambil karakteristik String Browser Agen Pengguna
-                const jenisBrowser = navigator.userAgent;
-                
-                // 3. Kombinasikan IP + Browser, lalu hash SHA-256 menjadi Sidik Jari Unik
-                const teksGabungan = clientIP + "|" + jenisBrowser;
-                clientFingerprint = await sha256(teksGabungan);
-                
-                console.log("Device IP Captured:", clientIP);
-                console.log("Device Fingerprint Generated:", clientFingerprint);
-            } catch (err) {
-                console.error("Gagal mengekstrak metadata perangkat:", err);
-                // Fallback jika koneksi API diblokir oleh adblocker klien
-                clientIP = "127.0.0.1";
-                clientFingerprint = await sha256("Fallback|" + navigator.userAgent);
-            }
-        }
-
-        // --- SISTEM KONTROL HARDWARE STREAMING KAMERA ---
+        // 1. Jalankan Hardware Kamera Kecepatan Tinggi
         async function jalankanKamera() {
             try {
-                streamKamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+                streamKamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 480 }, audio: false });
                 video.srcObject = streamKamera;
-            } catch (err) { 
-                alert("Sistem gagal memuat kamera Anda. Izinkan akses kamera pada pengaturan browser."); 
+                cameraStatus.innerText = "Kamera Terhubung. Menginisialisasi Engine Kecerdasan Wajah...";
+                setTimeout(muatModelAI, 1000);
+            } catch (err) {
+                cameraStatus.innerText = "Akses kamera gagal/ditolak oleh browser.";
             }
         }
 
-        btnAmbilFoto.addEventListener('click', () => {
-            if (video.classList.contains('hidden')) {
-                fotoBase64 = ""; 
-                photoPreview.classList.add('hidden'); 
-                video.classList.remove('hidden');
-                btnAmbilFoto.innerText = "Kunci Foto Profil Anda"; 
-                btnAmbilFoto.className = "bg-green-600 text-white text-xs px-4 py-1.5 rounded-full hover:bg-green-700 transition shadow-sm";
-                return;
-            }
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth || 640; 
-            canvas.height = video.videoHeight || 480;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            fotoBase64 = canvas.toDataURL('image/jpeg'); 
-            photoPreview.src = fotoBase64;
-            
-            video.classList.add('hidden'); 
-            photoPreview.classList.remove('hidden');
-            btnAmbilFoto.innerText = "Ambil Ulang Foto"; 
-            btnAmbilFoto.className = "bg-orange-500 text-white text-xs px-4 py-1.5 rounded-full hover:bg-orange-600 transition shadow-sm";
-        });
-
-        // Jalankan pengumpul sidik jari digital sejak awal halaman dibuka
-        window.addEventListener('DOMContentLoaded', () => {
-            dapatkanIdentitasDigitalPerangkat();
-        });
-        // --- FUNGSIONALITAS PANDUAN BUKA FORM LANJUTAN ---
-        function bukaFormTahapDua() {
-            // 1. Kunci elemen Email & Hilangkan Tombol Kirim OTP
-            emailInput.setAttribute('disabled', true);
-            btnKirimOTP.style.display = "none";
-            btnKirimOTP.classList.add('hidden');
-            
-            // 2. Tampilkan inputan kode verifikasi OTP
-            otpBox.classList.remove('hidden');
-            otpBox.style.display = "block";
-            
-            // 3. Tampilkan seluruh sisa form input data & jalankan modul streaming kamera
-            formLanjutanBox.classList.remove('hidden');
-            formLanjutanBox.style.display = "block";
-            
-            // 4. Aktifkan Tombol Submit secara fisik di layar
-            btnDaftar.removeAttribute('disabled');
-            btnDaftar.style.display = "block";
-            btnDaftar.className = "w-1/2 bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md";
-            
-            // 5. Buka aliran kamera profil
-            jalankanKamera();
-            
-            // 6. Pasang status required pada form lanjutan yang baru terbuka
-            document.getElementById('no_karyawan').setAttribute('required', true);
-            document.getElementById('nama').setAttribute('required', true);
-            document.getElementById('no_telepon').setAttribute('required', true);
-            document.getElementById('username').setAttribute('required', true);
-            document.getElementById('password').setAttribute('required', true);
-        }
-
-        // --- TAHAP 1: INTERSEPTOR KIRIM & VERIFIKASI EMAIL GMAIL ---
-        btnKirimOTP.addEventListener('click', async () => {
-            const emailValue = emailInput.value.trim();
-            if(!emailValue || !emailInput.checkValidity()) {
-                return alert("Mohon masukkan alamat email Gmail yang valid!");
-            }
-
-            btnKirimOTP.innerText = "Memproses...";
-            btnKirimOTP.setAttribute('disabled', true);
-            
+        // 2. Load Model face-api.js dari Jaringan Distribusi CDN Publik
+        async function muatModelAI() {
+            const MODEL_URL = 'https://unpkg.com/face-api.js@0.22.2/models';
             try {
-                // Kirim dengan standarisasi payload terbungkus text/plain agar bebas CORS
-                const response = await fetch(APPS_SCRIPT_URL, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ 
-                        action: 'sendOTP', 
-                        payload: { 
-                            email: emailValue,
-                            ip: clientIP,
-                            fingerprint: clientFingerprint
-                        }
-                    }) 
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === "success") {
-                    alert(result.message);
-                    bukaFormTahapDua();
-                } else { 
-                    alert("Penolakan Server: " + result.message); 
-                    btnKirimOTP.innerText = "Kirim OTP"; 
-                    btnKirimOTP.removeAttribute('disabled');
-                }
-            } catch (e) { 
-                // Fallback otomatis jika data terekam di sheet OTP_Codes namun respon JSON diblokir redirect Google
-                alert("Sistem berhasil memproses email Anda! Mohon periksa kotak masuk (atau spam) email Gmail Anda untuk melihat 6 digit kode OTP.");
-                bukaFormTahapDua();
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                document.getElementById('livenessInstruction').innerText = "Silakan Hadapkan Wajah Lurus ke Kamera";
+                stepLiveness = 1;
+                perbaruiProgressBar();
+                mulaiPemindaianLiveness();
+            } catch (err) {
+                document.getElementById('livenessInstruction').innerText = "Gagal memuat modul pengenal wajah.";
             }
+        }
+
+        function perbaruiProgressBar() {
+            document.getElementById('livenessProgress').style.width = `${(stepLiveness / 5) * 100}%`;
+        }
+
+        // 3. Loop Pemindaian Interaktif & Kalkulasi Geometris Wajah
+        async function mulaiPemindaianLiveness() {
+            if (!video || video.paused || video.ended) return setTimeout(mulaiPemindaianLiveness, 200);
+
+            const deteksi = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+
+            if (deteksi) {
+                const landmarks = deteksi.landmarks;
+                const hidung = landmarks.getNosetip()[0];
+                const rahangKiri = landmarks.getJawOutline()[0];
+                const rahangKanan = landmarks.getJawOutline()[16];
+
+                const jarakKeKiri = hidung.x - rahangKiri.x;
+                const jarakKeKanan = rahangKanan.x - hidung.x;
+                const rasioHadap = jarakKeKiri / jarakKeKanan;
+
+                const { x, y, width, height } = deteksi.detection.box;
+
+                if (stepLiveness === 1) {
+                    if (rasioHadap >= 0.85 && rasioHadap <= 1.15) {
+                        dataFotoWajah.depan = tangkapDanPotongCanvas(video, x, y, width, height);
+                        document.getElementById('livenessInstruction').innerText = "Bagus! Sekarang Tengok ke KIRI";
+                        stepLiveness = 2;
+                        perbaruiProgressBar();
+                        await delay(1500);
+                    }
+                } 
+                else if (stepLiveness === 2) {
+                    if (rasioHadap < 0.55) {
+                        dataFotoWajah.kiri = tangkapDanPotongCanvas(video, x, y, width, height);
+                        document.getElementById('livenessInstruction').innerText = "Bagus! Sekarang Tengok ke KANAN";
+                        stepLiveness = 3;
+                        perbaruiProgressBar();
+                        await delay(1500);
+                    }
+                } 
+                else if (stepLiveness === 3) {
+                    if (rasioHadap > 1.8) {
+                        dataFotoWajah.kanan = tangkapDanPotongCanvas(video, x, y, width, height);
+                        document.getElementById('livenessInstruction').innerText = "Sempurna! Terakhir, SILAKAN BERKEDIP";
+                        stepLiveness = 4;
+                        perbaruiProgressBar();
+                        eyeRatioBase = hitungRasioKelopakMata(landmarks);
+                        await delay(1000);
+                    }
+                } 
+                else if (stepLiveness === 4) {
+                    const rasioMataSekarang = hitungRasioKelopakMata(landmarks);
+                    if (rasioMataSekarang < eyeRatioBase * 0.72) {
+                        document.getElementById('livenessInstruction').className = "text-xs font-bold text-green-500 uppercase tracking-wider";
+                        document.getElementById('livenessInstruction').innerText = "Liveness Valid! Tombol Aktif.";
+                        stepLiveness = 5;
+                        perbaruiProgressBar();
+                        
+                        // Aktifkan tombol submit
+                        btnDaftar.removeAttribute('disabled');
+                        btnDaftar.className = "w-full bg-blue-600 text-white p-3 rounded-xl text-sm font-medium hover:bg-blue-700 transition shadow-md cursor-pointer";
+                    }
+                }
+            }
+
+            if (stepLiveness < 5) {
+                requestAnimationFrame(mulaiPemindaianLiveness);
+            }
+        }
+
+        function tangkapDanPotongCanvas(videoEl, x, y, w, h) {
+            const canvasPotong = document.createElement('canvas');
+            const ctx = canvasPotong.getContext('2d');
+            canvasPotong.width = 200;
+            canvasPotong.height = 200;
+            ctx.drawImage(videoEl, x, y, w, h, 0, 0, 200, 200);
+            return canvasPotong.toDataURL('image/jpeg', 0.85);
+        }
+
+        function hitungRasioKelopakMata(landmarks) {
+            const mataKiri = landmarks.getLeftEye();
+            const tinggiMata = Math.abs(mataKiri[1].y - mataKiri[5].y) + Math.abs(mataKiri[2].y - mataKiri[4].y);
+            const lebarMata = Math.abs(mataKiri[0].x - mataKiri[3].x);
+            return tinggiMata / (2.0 * lebarMata);
+        }
+
+        function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        // Metadata IP & OTP Trigger Handling Tetap Sama Sesuai V1.0
+        async function ambilMetadataKlien() {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                clientIP = data.ip;
+                clientFingerprint = "Browser-" + btoa(navigator.userAgent).substring(0, 15);
+            } catch (e) { console.log("Gagal ambil IP internet."); }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            jalankanKamera();
+            ambilMetadataKlien();
         });
 
-        // --- TAHAP 2: PROSES VALIDASI AKHIR & SUBMIT DATA ---
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        // 4. Proses Submit Data Aman Terintegrasi Ke Apps Script
+        document.getElementById('formRegistrasi').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Validasi Pertahanan 1: Wajib Ambil Foto Profil
-            if(!fotoBase64) {
-                return alert("Pendaftaran Ditolak: Anda wajib mengambil dan mengunci foto profil di dalam lingkaran terlebih dahulu!");
-            }
-            
-            // Validasi Pertahanan 2: Panjang Karakter Password Minimal 6 Digit
-            const passwordMentah = document.getElementById('password').value;
-            if(passwordMentah.length < 6) {
-                return alert("Pendaftaran Ditolak: Password Anda terlalu pendek! Diwajibkan minimal berisi 6 karakter.");
-            }
-
-            const passwordHashed = await sha256(passwordMentah);
             const payload = {
-                action: 'register',
+                action: "registerUser",
                 payload: {
-                    no_karyawan: document.getElementById('no_karyawan').value.trim(),
-                    nama: document.getElementById('nama').value.trim(),
-                    no_telepon: document.getElementById('no_telepon').value.trim(),
-                    email: emailInput.value.trim(),
-                    otp: document.getElementById('otp_code').value.trim(),
-                    username: document.getElementById('username').value.trim(),
-                    password_hash: passwordHashed,
-                    fotoBase64: fotoBase64,
+                    email: document.getElementById('reg_email').value,
+                    otp: document.getElementById('reg_otp').value,
+                    username: document.getElementById('reg_user').value,
+                    nama: document.getElementById('reg_nama').value,
+                    password: document.getElementById('reg_pass').value,
+                    foto: dataFotoWajah.depan, // Mengirimkan foto wajah lurus terbaik hasil auto-crop
                     ip: clientIP,
                     fingerprint: clientFingerprint
                 }
@@ -312,20 +262,15 @@
                 
                 if (result.status === "success") {
                     alert(result.message);
-                    if (streamKamera) {
-                        streamKamera.getTracks().forEach(track => track.stop());
-                    }
+                    if (streamKamera) streamKamera.getTracks().forEach(track => track.stop());
                     window.location.href = "pending.html";
                 } else { 
-                    alert("Gagal Menyimpan Data: " + result.message); 
-                    btnDaftar.innerText = "Submit";
+                    alert("Gagal: " + result.message); 
+                    btnDaftar.innerText = "Submit Pendaftaran";
                     btnDaftar.removeAttribute('disabled');
                 }
             } catch (err) { 
-                // Fallback aman dari sisa cegatan redirect browser lintas domain
-                if (streamKamera) {
-                    streamKamera.getTracks().forEach(track => track.stop());
-                }
+                if (streamKamera) streamKamera.getTracks().forEach(track => track.stop());
                 window.location.href = "pending.html"; 
             }
         });
