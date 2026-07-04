@@ -5,7 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pendaftaran Berhasil - Menunggu Persetujuan</title>
     <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@4.3.2/index.min.css">
+
+    <!-- 1. Script untuk mematikan peringatan console (taruh sebelum script tailwind) -->
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && args[0].includes('production')) return; // Memblokir pesan peringatan tailwind
+            originalWarn.apply(console, args);
+        };
+    </script>
+
+    <!-- 2. Memanggil script JIT Tailwind v3 kesukaan Anda -->
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.10/tailwindcss.min.js"></script>
     <!-- 
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     -->
