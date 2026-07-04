@@ -315,7 +315,8 @@
         function jalankanJamDigital() {
             setInterval(() => {
                 const sekarang = new Date();
-                document.getElementById('liveClock').innerText = sekarang.toLocaleTimeString('id-ID') + " | " + sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                document.getElementById('liveClock').innerText = sekarang.toLocaleTimeString('id-ID') + 
+                " | " + sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
             }, 1000);
         }
 
